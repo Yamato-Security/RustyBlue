@@ -37,26 +37,37 @@ impl Detection {
         for record in parser.records() {
             match record {
                 Ok(r) => {
-                    let event: event::Evtx = quick_xml::de::from_str(&r.data)?;
-                    let event_id = event.system.event_id.to_string();
-                    let channel = event.system.channel.to_string();
-                    let event_data = event.parse_event_data();
+                    match quick_xml::de::from_str(&r.data) {
+                        Ok(event) => {
+                            let event: event::Evtx = event;
 
-                    &common.detection(&event.system, &event_data);
-                    if channel == "Security" {
-                        &security.detection(event_id, &event.system, &event.user_data, event_data);
-                    } else if channel == "System" {
-                        &system.detection(event_id, &event.system, event_data);
-                    } else if channel == "Application" {
-                        &application.detection(event_id, &event.system, event_data);
-                    } else if channel == "Microsoft-Windows-PowerShell/Operational" {
-                        &powershell.detection(event_id, &event.system, event_data);
-                    } else if channel == "Microsoft-Windows-Sysmon/Operational" {
-                        &sysmon.detection(event_id, &event.system, event_data);
-                    } else if channel == "Microsoft-Windows-AppLocker/EXE and DLL" {
-                        &applocker.detection(event_id, &event.system, event_data);
-                    } else {
-                        //&other.detection();
+                            let event_id = event.system.event_id.to_string();
+                            let channel = event.system.channel.to_string();
+                            let event_data = event.parse_event_data();
+
+                            &common.detection(&event.system, &event_data);
+                            if channel == "Security" {
+                                &security.detection(
+                                    event_id,
+                                    &event.system,
+                                    &event.user_data,
+                                    event_data,
+                                );
+                            } else if channel == "System" {
+                                &system.detection(event_id, &event.system, event_data);
+                            } else if channel == "Application" {
+                                &application.detection(event_id, &event.system, event_data);
+                            } else if channel == "Microsoft-Windows-PowerShell/Operational" {
+                                &powershell.detection(event_id, &event.system, event_data);
+                            } else if channel == "Microsoft-Windows-Sysmon/Operational" {
+                                &sysmon.detection(event_id, &event.system, event_data);
+                            } else if channel == "Microsoft-Windows-AppLocker/EXE and DLL" {
+                                &applocker.detection(event_id, &event.system, event_data);
+                            } else {
+                                //&other.detection();
+                            }
+                        }
+                        Err(_) => break,
                     }
                 }
                 Err(e) => eprintln!("{}", e),

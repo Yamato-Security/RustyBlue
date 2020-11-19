@@ -2,9 +2,9 @@ extern crate serde;
 
 use evtx::EvtxParser;
 use quick_xml::de::DeError;
-use std::{fs, path::PathBuf, process};
 use rusty_blue::detections::configs;
 use rusty_blue::detections::detection;
+use std::{fs, path::PathBuf, process};
 
 fn main() -> Result<(), DeError> {
     let filepath: String = configs::singleton()
