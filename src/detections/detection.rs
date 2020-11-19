@@ -67,7 +67,10 @@ impl Detection {
                                 //&other.detection();
                             }
                         }
-                        Err(_) => break,
+                        Err(err) => {
+                            println!("{}", err);
+                            break;
+                        },
                     }
                 }
                 Err(e) => eprintln!("{}", e),

@@ -7,13 +7,8 @@ use rusty_blue::detections::detection;
 use std::{fs, path::PathBuf, process};
 
 fn main() -> Result<(), DeError> {
-    let filepath: String = configs::singleton()
-        .args
-        .value_of("filepath")
-        .unwrap_or("")
-        .to_string();
-    if filepath != "" {
-        parse_file(&filepath);
+    if let Some(filepath) = configs::singleton().args.value_of("filepath") {
+        parse_file(&filepath.to_string());
     }
 
     Ok(())
