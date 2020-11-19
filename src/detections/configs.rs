@@ -45,15 +45,6 @@ fn build_app() -> clap::App<'static, 'static> {
         .author("Author name <author@example.com>")
         .setting(AppSettings::VersionlessSubcommands)
         .arg(Arg::from_usage("-f --filepath=[FILEPATH] 'event file path'"))
-        .arg(Arg::from_usage("--attackhunt=[ATTACK_HUNT] 'Attack Hunt'"))
-        .arg(Arg::from_usage("--csv-timeline=[CSV_TIMELINE] 'csv output timeline'"))
-        .arg(Arg::from_usage("--human-readable-timeline=[HUMAN_READABLE_TIMELINE] 'human readable timeline'"))
-        .arg(Arg::from_usage("-l --lang=[LANG] 'output language'"))
-        .arg(Arg::from_usage("-t --timezone=[TIMEZONE] 'timezone setting'"))
-        .arg(Arg::from_usage("-d --directory 'event log files directory'"))
-        .arg(Arg::from_usage("-s --statistics 'event statistics'"))
-        .arg(Arg::from_usage("-u --update 'signature update'"))
-        .arg(Arg::from_usage("--credits 'Zachary Mathis, Akira Nishikawa'"))
 }
 
 fn read_csv(filename: &str) -> Vec<Vec<String>> {
