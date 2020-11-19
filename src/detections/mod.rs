@@ -4,7 +4,6 @@ mod common;
 pub mod configs;
 pub mod detection;
 mod powershell;
-pub mod print;
 mod security;
 mod sysmon;
 mod system;
