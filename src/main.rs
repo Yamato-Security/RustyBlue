@@ -3,9 +3,9 @@ extern crate serde;
 use evtx::EvtxParser;
 use quick_xml::de::DeError;
 use std::{fs, path::PathBuf, process};
-use yamato_event_analyzer::detections::configs;
-use yamato_event_analyzer::detections::detection;
-use yamato_event_analyzer::omikuji::Omikuji;
+use rusty_blue::detections::configs;
+use rusty_blue::detections::detection;
+use rusty_blue::omikuji::Omikuji;
 
 fn main() -> Result<(), DeError> {
     let filepath: String = configs::singleton()

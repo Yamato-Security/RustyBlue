@@ -867,6 +867,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c691c0e608126e00913e33f0ccf3727d5fc84573623b8d65b2df340b5201783"
 
 [[package]]
+name = "rusty_blue"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "chrono",
+ "clap",
+ "csv",
+ "evtx",
+ "flate2",
+ "lazy_static",
+ "quick-xml 0.17.2",
+ "regex",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "yaml-rust",
+]
+
+[[package]]
 name = "ryu"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1179,25 +1198,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
-]
-
-[[package]]
-name = "yamato_event_analyzer"
-version = "0.1.0"
-dependencies = [
- "base64",
- "chrono",
- "clap",
- "csv",
- "evtx",
- "flate2",
- "lazy_static",
- "quick-xml 0.17.2",
- "regex",
- "serde",
- "serde_derive",
- "serde_json",
- "yaml-rust",
 ]
 
 [[package]]
