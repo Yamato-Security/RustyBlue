@@ -23,7 +23,7 @@ impl Common {
         }
     }
 
-    pub fn detection(&mut self, system: &event::System, event_data: &HashMap<String, String>) {
+    pub fn detection(&mut self, system: &event::System, _event_data: &HashMap<String, String>) {
         self.check_record_id(system);
     }
 

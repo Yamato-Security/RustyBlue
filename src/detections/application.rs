@@ -15,7 +15,7 @@ impl Application {
         &mut self,
         event_id: String,
         system: &event::System,
-        event_data: HashMap<String, String>,
+        _event_data: HashMap<String, String>,
     ) {
         self.emet(&event_id, system);
     }

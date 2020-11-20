@@ -12,7 +12,7 @@ impl System {
     pub fn detection(
         &mut self,
         event_id: String,
-        system: &event::System,
+        _system: &event::System,
         event_data: HashMap<String, String>,
     ) {
         self.system_log_clear(&event_id);
