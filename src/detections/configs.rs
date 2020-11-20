@@ -45,7 +45,7 @@ fn build_app() -> clap::App<'static, 'static> {
         .author("YamatoSecurity <info@yamatosecurity.com>")
         .setting(AppSettings::VersionlessSubcommands)
         .arg(Arg::from_usage(
-            "-f --filepath=[FILEPATH] 'event file path'",
+            "-f --filepath=[FILEPATH] 'analyze event file'",
         ))
         .arg(Arg::from_usage("-c --credits 'print credits infomation'"))
 }
