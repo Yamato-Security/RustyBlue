@@ -11,7 +11,7 @@ fn main() -> Result<(), DeError> {
         parse_file(&filepath.to_string());
     }
 
-    if let Some(_) = configs::singleton().args.value_of("credits") {
+    if configs::singleton().args.is_present("credits") {
         print_credits();
     }
 

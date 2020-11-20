@@ -47,7 +47,7 @@ fn build_app() -> clap::App<'static, 'static> {
         .arg(Arg::from_usage(
             "-f --filepath=[FILEPATH] 'event file path'",
         ))
-        .arg(Arg::from_usage("-c --credits"))
+        .arg(Arg::from_usage("-c --credits 'print credits infomation'"))
 }
 
 fn read_csv(filename: &str) -> Vec<Vec<String>> {
