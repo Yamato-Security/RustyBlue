@@ -70,7 +70,7 @@ impl Detection {
                         Err(err) => {
                             println!("{}", err);
                             break;
-                        },
+                        }
                     }
                 }
                 Err(e) => eprintln!("{}", e),

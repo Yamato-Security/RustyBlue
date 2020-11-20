@@ -40,11 +40,14 @@ fn build_app() -> clap::App<'static, 'static> {
         .unwrap();
 
     App::new(program)
-        .about("Yea! (Yamato Event Analyzer). Aiming to be the world's greatest Windows event log analysis tool!")
+        .about("RustyBlue")
         .version("0.0.1")
-        .author("Author name <author@example.com>")
+        .author("YamatoSecurity <info@yamatosecurity.com>")
         .setting(AppSettings::VersionlessSubcommands)
-        .arg(Arg::from_usage("-f --filepath=[FILEPATH] 'event file path'"))
+        .arg(Arg::from_usage(
+            "-f --filepath=[FILEPATH] 'event file path'",
+        ))
+        .arg(Arg::from_usage("-c --credits"))
 }
 
 fn read_csv(filename: &str) -> Vec<Vec<String>> {

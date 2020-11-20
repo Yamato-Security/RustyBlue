@@ -11,7 +11,18 @@ fn main() -> Result<(), DeError> {
         parse_file(&filepath.to_string());
     }
 
+    if let Some(_) = configs::singleton().args.value_of("credits") {
+        print_credits();
+    }
+
     Ok(())
+}
+
+fn print_credits() {
+    match fs::read_to_string("./credits.txt") {
+        Ok(contents) => println!("{}", contents),
+        Err(err) => println!("{}", err),
+    }
 }
 
 fn parse_file(filepath: &str) {
