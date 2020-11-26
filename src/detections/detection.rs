@@ -67,9 +67,7 @@ impl Detection {
                                 //&other.detection();
                             }
                         }
-                        Err(err) => {
-                            println!("{}", err);
-                        }
+                        Err(err) => println!("{}", err),
                     }
                 }
                 Err(e) => eprintln!("{}", e),
