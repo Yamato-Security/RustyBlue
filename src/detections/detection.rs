@@ -69,7 +69,6 @@ impl Detection {
                         }
                         Err(err) => {
                             println!("{}", err);
-                            break;
                         }
                     }
                 }
