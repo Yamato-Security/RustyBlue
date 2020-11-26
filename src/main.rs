@@ -1,12 +1,11 @@
 extern crate serde;
 
 use evtx::EvtxParser;
-use quick_xml::de::DeError;
 use rusty_blue::detections::configs;
 use rusty_blue::detections::detection;
 use std::{fs, path::PathBuf, process};
 
-fn main() -> Result<(), DeError> {
+fn main() {
     if let Some(filepath) = configs::singleton().args.value_of("filepath") {
         parse_file(&filepath.to_string());
     }
@@ -14,8 +13,6 @@ fn main() -> Result<(), DeError> {
     if configs::singleton().args.is_present("credits") {
         print_credits();
     }
-
-    Ok(())
 }
 
 fn print_credits() {
