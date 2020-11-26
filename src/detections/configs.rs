@@ -51,11 +51,18 @@ fn build_app() -> clap::App<'static, 'static> {
 }
 
 fn read_csv(filename: &str) -> Vec<Vec<String>> {
-    let mut f = File::open(filename).expect("file not found!!!");
-    let mut contents: String = String::new();
     let mut ret = vec![];
-    if f.read_to_string(&mut contents).is_err() {
-        return ret;
+    let mut contents: String = String::new();
+    match File::open(filename) {
+        Ok(f) => {
+            let mut f: File = f;
+            if f.read_to_string(&mut contents).is_err() {
+                return ret;
+            }
+        }
+        Err(err) => {
+            println!("Error : {} not found , {}", filename, err);
+        }
     }
 
     let mut rdr = csv::Reader::from_reader(contents.as_bytes());

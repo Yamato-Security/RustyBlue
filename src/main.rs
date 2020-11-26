@@ -21,7 +21,7 @@ fn main() -> Result<(), DeError> {
 fn print_credits() {
     match fs::read_to_string("./credits.txt") {
         Ok(contents) => println!("{}", contents),
-        Err(err) => println!("{}", err),
+        Err(err) => println!("Error : credits.txt not found , {}", err),
     }
 }
 
