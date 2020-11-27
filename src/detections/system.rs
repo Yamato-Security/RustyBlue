@@ -12,17 +12,22 @@ impl System {
     pub fn detection(
         &mut self,
         event_id: String,
-        _system: &event::System,
+        system: &event::System,
         event_data: HashMap<String, String>,
     ) {
-        self.system_log_clear(&event_id);
-        self.windows_event_log(&event_id, &event_data);
-        self.new_service_created(&event_id, &event_data);
-        self.interactive_service_warning(&event_id, &event_data);
-        self.suspicious_service_name(&event_id, &event_data);
+        self.system_log_clear(&event_id, &system.time_created.system_time);
+        self.windows_event_log(&event_id, &event_data, &system.time_created.system_time);
+        self.new_service_created(&event_id, &event_data, &system.time_created.system_time);
+        self.interactive_service_warning(&event_id, &event_data, &system.time_created.system_time);
+        self.suspicious_service_name(&event_id, &event_data, &system.time_created.system_time);
     }
 
-    fn new_service_created(&mut self, event_id: &String, event_data: &HashMap<String, String>) {
+    fn new_service_created(
+        &mut self,
+        event_id: &String,
+        event_data: &HashMap<String, String>,
+        system_time: &String,
+    ) {
         if event_id != "7045" {
             return;
         }
@@ -32,13 +37,14 @@ impl System {
         let commandline = &event_data.get("ImagePath").unwrap_or(&default);
         let text = utils::check_regex(&servicename, 1);
         if !text.is_empty() {
+            println!("Date    : {}", system_time);
             println!("Message : New Service Created");
             println!("Command : {}", commandline);
             println!("Results : Service name: {}", servicename);
             println!("Results : {}", text);
         }
         if !commandline.is_empty() {
-            utils::check_command(7045, &commandline, 1000, 0, &servicename, &"");
+            utils::check_command(7045, &commandline, 1000, 0, &servicename, &"", &system_time);
         }
     }
 
@@ -46,6 +52,7 @@ impl System {
         &mut self,
         event_id: &String,
         event_data: &HashMap<String, String>,
+        system_time: &String,
     ) {
         if event_id != "7030" {
             return;
@@ -53,13 +60,19 @@ impl System {
 
         let default = String::from("");
         let servicename = &event_data.get("param1").unwrap_or(&default);
+        println!("Date    : {}", system_time);
         println!("Message : Interactive service warning");
         println!("Results : Service name: {}", servicename);
         println!("Results : Malware (and some third party software) trigger this warning");
         println!("{}", utils::check_regex(&servicename, 1));
     }
 
-    fn suspicious_service_name(&mut self, event_id: &String, event_data: &HashMap<String, String>) {
+    fn suspicious_service_name(
+        &mut self,
+        event_id: &String,
+        event_data: &HashMap<String, String>,
+        system_time: &String,
+    ) {
         if event_id != "7036" {
             return;
         }
@@ -68,13 +81,14 @@ impl System {
         let servicename = &event_data.get("param1").unwrap_or(&default);
         let text = utils::check_regex(&servicename, 1);
         if !text.is_empty() {
+            println!("Date    : {}", system_time);
             println!("Message : Suspicious Service Name");
             println!("Results : Service name: {}", servicename);
             println!("Results : {}", text);
         }
     }
 
-    fn system_log_clear(&mut self, event_id: &String) {
+    fn system_log_clear(&mut self, event_id: &String, system_time: &String) {
         if event_id != "104" {
             return;
         }
@@ -83,7 +97,12 @@ impl System {
         println!("Results : The System log was cleared.");
     }
 
-    fn windows_event_log(&mut self, event_id: &String, event_data: &HashMap<String, String>) {
+    fn windows_event_log(
+        &mut self,
+        event_id: &String,
+        event_data: &HashMap<String, String>,
+        system_time: &String,
+    ) {
         if event_id != "7040" {
             return;
         }
