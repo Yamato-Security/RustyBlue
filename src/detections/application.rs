@@ -43,7 +43,7 @@ impl Application {
                     let command = re.replace_all(application, "");
                     let username = message_split[4];
 
-                    println!("Date    : {:?}", system.time_created);
+                    println!("Date    : {}", system.time_created.system_time);
                     println!("Message EMET Block");
                     println!("Command : {}", command);
                     println!("Results : {}", text);
