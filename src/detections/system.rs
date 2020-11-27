@@ -93,6 +93,7 @@ impl System {
             return;
         }
 
+        println!("Date : {}", system_time);
         println!("Message : System Log Clear");
         println!("Results : The System log was cleared.");
     }
@@ -109,6 +110,7 @@ impl System {
 
         if let Some(_param1) = event_data.get("param1") {
             if _param1 == "Windows Event Log" {
+                println!("Date : {}", system_time);
                 println!("Service name : {}", _param1);
                 if let Some(_param2) = event_data.get("param2") {
                     if _param2 == "disabled" {
