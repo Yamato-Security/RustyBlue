@@ -16,6 +16,7 @@ pub fn check_command(
     servicecmd: usize,
     servicename: &str,
     creator: &str,
+    system_time: &String,
 ) {
     let mut text = "".to_string();
     let mut base64 = "".to_string();
@@ -76,6 +77,7 @@ pub fn check_command(
         }
     }
     if !text.is_empty() {
+        println!("Date : {}", system_time);
         println!("EventID : {}", event_id);
         if servicecmd != 0 {
             println!("Message : Suspicious Service Command");
@@ -200,7 +202,15 @@ mod tests {
 
     #[test]
     fn test_check_command() {
-        utils::check_command(1, "dir", 100, 100, "dir", "dir");
+        utils::check_command(
+            1,
+            "dir",
+            100,
+            100,
+            "dir",
+            "dir",
+            &"9/19/2016 9:13:04 PM".to_string(),
+        );
 
         //test return with whitelist.
         utils::check_command(
@@ -210,6 +220,7 @@ mod tests {
             100,
             "dir",
             "dir",
+            &"9/19/2016 9:13:04 PM".to_string(),
         );
     }
 }

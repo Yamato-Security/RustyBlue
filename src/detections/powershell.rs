@@ -13,14 +13,19 @@ impl PowerShell {
     pub fn detection(
         &mut self,
         event_id: String,
-        _system: &event::System,
+        system: &event::System,
         event_data: HashMap<String, String>,
     ) {
-        self.execute_pipeline(&event_id, &event_data);
-        self.execute_remote_command(&event_id, &event_data);
+        self.execute_pipeline(&event_id, &event_data, &system.time_created.system_time);
+        self.execute_remote_command(&event_id, &event_data, &system.time_created.system_time);
     }
 
-    fn execute_pipeline(&mut self, event_id: &String, event_data: &HashMap<String, String>) {
+    fn execute_pipeline(
+        &mut self,
+        event_id: &String,
+        event_data: &HashMap<String, String>,
+        system_time: &String,
+    ) {
         if event_id != "4103" {
             return;
         }
@@ -39,12 +44,17 @@ impl PowerShell {
             let command = rm_after.replace_all(&temp_command_with_extra, "");
 
             if command != "" {
-                utils::check_command(4103, &command, 1000, 0, &default, &default);
+                utils::check_command(4103, &command, 1000, 0, &default, &default, &system_time);
             }
         }
     }
 
-    fn execute_remote_command(&mut self, event_id: &String, event_data: &HashMap<String, String>) {
+    fn execute_remote_command(
+        &mut self,
+        event_id: &String,
+        event_data: &HashMap<String, String>,
+        system_time: &String,
+    ) {
         if event_id != "4104" {
             return;
         }
@@ -54,7 +64,15 @@ impl PowerShell {
         if path == "".to_string() {
             let commandline = event_data.get("ScriptBlockText").unwrap_or(&default);
             if commandline.to_string() != default {
-                utils::check_command(4104, &commandline, 1000, 0, &default, &default);
+                utils::check_command(
+                    4104,
+                    &commandline,
+                    1000,
+                    0,
+                    &default,
+                    &default,
+                    &system_time,
+                );
             }
         }
     }

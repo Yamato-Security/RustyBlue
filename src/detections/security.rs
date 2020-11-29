@@ -88,24 +88,24 @@ impl Security {
     pub fn detection(
         &mut self,
         event_id: String,
-        _system: &event::System,
+        system: &event::System,
         user_data: &Option<event::UserData>,
         event_data: HashMap<String, String>,
     ) {
-        self.process_created(&event_id, &event_data);
-        self.se_debug_privilege(&event_id, &event_data);
-        self.account_created(&event_id, &event_data)
+        self.process_created(&event_id, &event_data, &system.time_created.system_time);
+        self.se_debug_privilege(&event_id, &event_data, &system.time_created.system_time);
+        self.account_created(&event_id, &event_data, &system.time_created.system_time)
             .and_then(Security::print_console);
-        self.add_member_security_group(&event_id, &event_data)
+        self.add_member_security_group(&event_id, &event_data, &system.time_created.system_time)
             .and_then(Security::print_console);
         self.failed_logon(&event_id, &event_data);
-        self.sensitive_priviledge(&event_id, &event_data)
+        self.sensitive_priviledge(&event_id, &event_data, &system.time_created.system_time)
             .and_then(Security::print_console);
-        self.attempt_priviledge(&event_id, &event_data)
+        self.attempt_priviledge(&event_id, &event_data, &system.time_created.system_time)
             .and_then(Security::print_console);
         self.pass_spray(&event_id, &event_data)
             .and_then(Security::print_console);
-        self.audit_log_cleared(&event_id, &user_data)
+        self.audit_log_cleared(&event_id, &user_data, &system.time_created.system_time)
             .and_then(Security::print_console);
     }
 
@@ -115,7 +115,12 @@ impl Security {
         return Option::Some(v);
     }
 
-    fn process_created(&mut self, event_id: &String, event_data: &HashMap<String, String>) {
+    fn process_created(
+        &mut self,
+        event_id: &String,
+        event_data: &HashMap<String, String>,
+        system_time: &String,
+    ) {
         if event_id != "4688" {
             return;
         }
@@ -124,13 +129,26 @@ impl Security {
         let creator = event_data
             .get("ParentProcessName")
             .unwrap_or(&self.empty_str);
-        utils::check_command(4688, &commandline, 1000, 0, &self.empty_str, &creator);
+        utils::check_command(
+            4688,
+            &commandline,
+            1000,
+            0,
+            &self.empty_str,
+            &creator,
+            &system_time,
+        );
     }
 
     //
     // Special privileges assigned to new logon (possible admin access)
     //
-    fn se_debug_privilege(&mut self, event_id: &String, event_data: &HashMap<String, String>) {
+    fn se_debug_privilege(
+        &mut self,
+        event_id: &String,
+        event_data: &HashMap<String, String>,
+        system_time: &String,
+    ) {
         if event_id != "4672" {
             return;
         }
@@ -140,6 +158,7 @@ impl Security {
                 // alert_all_adminが有効であれば、標準出力して知らせる
                 // DeepBlueCLIでは必ず0になっていて、基本的には表示されない。
                 if self.alert_all_admin == 1 {
+                    println!("Date:{}", system_time);
                     println!("Logon with SeDebugPrivilege (admin access)");
                     println!("Username:{}", event_data["SubjectUserName"]);
                     println!("Domain:{}", event_data["SubjectDomainName"]);
@@ -185,12 +204,14 @@ impl Security {
         &mut self,
         event_id: &String,
         event_data: &HashMap<String, String>,
+        system_time: &String,
     ) -> Option<Vec<String>> {
         if event_id != "4720" {
             return Option::None;
         }
 
         let mut msges: Vec<String> = Vec::new();
+        msges.push(format!("Date: {}", system_time));
         msges.push("New User Created".to_string());
 
         let username = event_data.get("TargetUserName").unwrap_or(&self.empty_str);
@@ -206,14 +227,17 @@ impl Security {
         &mut self,
         event_id: &String,
         event_data: &HashMap<String, String>,
+        system_time: &String,
     ) -> Option<Vec<String>> {
         // check if group is Administrator, may later expand to all groups
         if event_data.get("TargetUserName").unwrap_or(&self.empty_str) != "Administrators" {
             return Option::None;
         }
 
-        // A member was added to a security-enabled (global|local|universal) group.
         let mut msges: Vec<String> = Vec::new();
+        msges.push(format!("Date: {}", system_time));
+
+        // A member was added to a security-enabled (global|local|universal) group.
         if event_id == "4728" {
             msges.push("User added to global Administrators group".to_string());
         } else if event_id == "4732" {
@@ -253,6 +277,7 @@ impl Security {
         &mut self,
         event_id: &String,
         event_data: &HashMap<String, String>,
+        system_time: &String,
     ) -> Option<Vec<String>> {
         if event_id != "4673" {
             return Option::None;
@@ -265,6 +290,7 @@ impl Security {
             return Option::None;
         }
 
+        msges.push(format!("Date: {}", system_time));
         msges.push("Sensititive Privilege Use Exceeds Threshold".to_string());
         msges.push(
             "Potentially indicative of Mimikatz, multiple sensitive privilege calls have been made"
@@ -286,6 +312,7 @@ impl Security {
         &mut self,
         event_id: &String,
         event_data: &HashMap<String, String>,
+        system_time: &String,
     ) -> Option<Vec<String>> {
         if event_id != "4674" {
             return Option::None;
@@ -302,6 +329,7 @@ impl Security {
         }
 
         let mut msges: Vec<String> = Vec::new();
+        msges.push(format!("Date: {}", system_time));
         msges.push("Possible Hidden Service Attempt".to_string());
         msges.push("User requested to modify the Dynamic Access Control (DAC) permissions of a sevice, possibly to hide it from view".to_string());
 
@@ -386,12 +414,14 @@ impl Security {
         &mut self,
         event_id: &String,
         user_data: &Option<event::UserData>,
+        system_time: &String,
     ) -> Option<Vec<String>> {
         if event_id != "1102" {
             return Option::None;
         }
 
         let mut msges: Vec<String> = Vec::new();
+        msges.push(format!("Date: {}", system_time));
         msges.push("Audit Log Clear".to_string());
         msges.push("The Audit log was cleared".to_string());
         let username = user_data
@@ -428,10 +458,15 @@ mod tests {
         let option_v = sec.account_created(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         let v = option_v.unwrap();
         let mut ite = v.iter();
+        assert_eq!(
+            &"Date: 2013-10-23T16:22:39.9735000Z".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
         assert_eq!(
             &"New User Created".to_string(),
             ite.next().unwrap_or(&"".to_string())
@@ -462,6 +497,7 @@ mod tests {
         let option_v = sec.account_created(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         assert_eq!(Option::None, option_v);
@@ -501,10 +537,15 @@ mod tests {
         let option_v = sec.account_created(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         let v = option_v.unwrap();
         let mut ite = v.iter();
+        assert_eq!(
+            &"Date: 2013-10-23T16:22:39.9735000Z".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
         assert_eq!(
             &"New User Created".to_string(),
             ite.next().unwrap_or(&"".to_string())
@@ -585,10 +626,15 @@ mod tests {
         let option_v = sec.add_member_security_group(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         let v = option_v.unwrap();
         let mut ite = v.iter();
+        assert_eq!(
+            &"Date: 2013-10-23T16:22:40.0047500Z".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
         assert_eq!(
             &"User added to local Administrators group".to_string(),
             ite.next().unwrap_or(&"".to_string())
@@ -619,10 +665,15 @@ mod tests {
         let option_v = sec.add_member_security_group(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         let v = option_v.unwrap();
         let mut ite = v.iter();
+        assert_eq!(
+            &"Date: 2013-10-23T16:22:40.0047500Z".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
         assert_eq!(
             &"User added to global Administrators group".to_string(),
             ite.next().unwrap_or(&"".to_string())
@@ -653,10 +704,15 @@ mod tests {
         let option_v = sec.add_member_security_group(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         let v = option_v.unwrap();
         let mut ite = v.iter();
+        assert_eq!(
+            &"Date: 2013-10-23T16:22:40.0047500Z".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
         assert_eq!(
             &"User added to universal Administrators group".to_string(),
             ite.next().unwrap_or(&"".to_string())
@@ -687,6 +743,7 @@ mod tests {
         let option_v = sec.add_member_security_group(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
         assert_eq!(Option::None, option_v);
     }
@@ -708,6 +765,7 @@ mod tests {
         let option_v = sec.add_member_security_group(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
         assert_eq!(Option::None, option_v);
     }
@@ -748,10 +806,15 @@ mod tests {
         let option_v = sec.add_member_security_group(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         let v = option_v.unwrap();
         let mut ite = v.iter();
+        assert_eq!(
+            &"Date: 2013-10-23T16:22:40.0047500Z".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
         assert_eq!(
             &"User added to local Administrators group".to_string(),
             ite.next().unwrap_or(&"".to_string())
@@ -981,11 +1044,15 @@ mod tests {
 
         let ite = [1, 2, 3, 4, 5, 6, 7].iter();
         ite.for_each(|i| {
-            let msg = sec.sensitive_priviledge(&event.system.event_id.to_string(), &event.parse_event_data());
+            let msg = sec.sensitive_priviledge(&event.system.event_id.to_string(), &event.parse_event_data(), &event.system.time_created.system_time);
             // i == 7ときにHitしない
             if i == &6 {
                 let v = msg.unwrap();
                 let mut ite = v.iter();
+                assert_eq!(
+                    &"Date: 2019-04-30T18:08:29.1380587Z".to_string(),
+                    ite.next().unwrap_or(&"".to_string())
+                );
                 assert_eq!(
                     &"Sensititive Privilege Use Exceeds Threshold".to_string(),
                     ite.next().unwrap_or(&"".to_string())
@@ -1023,6 +1090,7 @@ mod tests {
             let msg = sec.sensitive_priviledge(
                 &event.system.event_id.to_string(),
                 &event.parse_event_data(),
+                &event.system.time_created.system_time,
             );
             assert_eq!(Option::None, msg);
         });
@@ -1071,11 +1139,16 @@ mod tests {
         let msg = sec.attempt_priviledge(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         assert_ne!(Option::None, msg);
         let v = msg.unwrap();
         let mut ite = v.iter();
+        assert_eq!(
+            &"Date: 2020-09-14T14:48:28.6830484Z".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
         assert_eq!(
             &"Possible Hidden Service Attempt".to_string(),
             ite.next().unwrap_or(&"".to_string())
@@ -1110,6 +1183,7 @@ mod tests {
         let msg = sec.attempt_priviledge(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         assert_eq!(Option::None, msg);
@@ -1129,6 +1203,7 @@ mod tests {
         let msg = sec.attempt_priviledge(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         assert_eq!(Option::None, msg);
@@ -1147,6 +1222,7 @@ mod tests {
         let msg = sec.attempt_priviledge(
             &event.system.event_id.to_string(),
             &event.parse_event_data(),
+            &event.system.time_created.system_time,
         );
 
         assert_eq!(Option::None, msg);
@@ -1284,11 +1360,19 @@ mod tests {
         let event: event::Evtx = quick_xml::de::from_str(&xml_str).unwrap();
 
         let mut sec = security::Security::new();
-        let msg = sec.audit_log_cleared(&event.system.event_id.to_string(), &event.user_data);
+        let msg = sec.audit_log_cleared(
+            &event.system.event_id.to_string(),
+            &event.user_data,
+            &event.system.time_created.system_time,
+        );
 
         assert_ne!(Option::None, msg);
         let v = msg.unwrap();
         let mut ite = v.iter();
+        assert_eq!(
+            &"Date: 2019-04-30T19:27:00.2974504Z".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
         assert_eq!(
             &"Audit Log Clear".to_string(),
             ite.next().unwrap_or(&"".to_string())
@@ -1312,7 +1396,11 @@ mod tests {
         let event: event::Evtx = quick_xml::de::from_str(&xml_str).unwrap();
 
         let mut sec = security::Security::new();
-        let msg = sec.audit_log_cleared(&event.system.event_id.to_string(), &event.user_data);
+        let msg = sec.audit_log_cleared(
+            &event.system.event_id.to_string(),
+            &event.user_data,
+            &event.system.time_created.system_time,
+        );
         assert_eq!(Option::None, msg);
     }
 
