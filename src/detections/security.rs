@@ -1062,11 +1062,11 @@ mod tests {
                     ite.next().unwrap_or(&"".to_string())
                 );
                 assert_eq!(
-                    &"Username: Sec504".to_string(),
+                    &"Username: WinHoge".to_string(),
                     ite.next().unwrap_or(&"".to_string())
                 );
                 assert_eq!(
-                    &"Domain Name: SEC504STUDENT",
+                    &"Domain Name: Windows-HOGE",
                     ite.next().unwrap_or(&"".to_string())
                 );
             } else {
@@ -1112,13 +1112,13 @@ mod tests {
                 <Correlation/>
                 <Execution ProcessID='4' ThreadID='1664'/>
                 <Channel>Security</Channel>
-                <Computer>Sec504Student</Computer>
+                <Computer>Windows-HOGE</Computer>
                 <Security/>
             </System>
             <EventData>
                 <Data Name='SubjectUserSid'>S-1-5-21-2977773840-2930198165-1551093962-1000</Data>
-                <Data Name='SubjectUserName'>Sec504</Data>
-                <Data Name='SubjectDomainName'>SEC504STUDENT</Data>
+                <Data Name='SubjectUserName'>WinHoge</Data>
+                <Data Name='SubjectDomainName'>Windows-HOGE</Data>
                 <Data Name='SubjectLogonId'>0x1e3dd</Data>
                 <Data Name='ObjectServer'>Security</Data>
                 <Data Name='Service'>-</Data>
@@ -1155,7 +1155,7 @@ mod tests {
         );
         assert_eq!(&"User requested to modify the Dynamic Access Control (DAC) permissions of a sevice, possibly to hide it from view".to_string(), ite.next().unwrap_or(&"".to_string()));
         assert_eq!(
-            &"User: Sec504".to_string(),
+            &"User: WinHoge".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -1244,13 +1244,13 @@ mod tests {
                     <Correlation/>
                     <Execution ProcessID='4' ThreadID='5756'/>
                     <Channel>Security</Channel>
-                    <Computer>Sec504Student</Computer>
+                    <Computer>Windows-Hoge</Computer>
                     <Security/>
                 </System>
                 <EventData>
                     <Data Name='SubjectUserSid'>S-1-5-21-2977773840-2930198165-1551093962-1000</Data>
-                    <Data Name='SubjectUserName'>Sec504</Data>
-                    <Data Name='SubjectDomainName'>SEC504STUDENT</Data>
+                    <Data Name='SubjectUserName'>WinHoge</Data>
+                    <Data Name='SubjectDomainName'>Windows-Hoge</Data>
                     <Data Name='SubjectLogonId'>0x99e3d</Data>
                     <Data Name='ObjectServer'>SC Manager</Data>
                     <Data Name='ObjectType'>SERVICE OBJECT</Data>
@@ -1420,14 +1420,14 @@ mod tests {
                     <Correlation/>
                     <Execution ProcessID='1228' ThreadID='6280'/>
                     <Channel>Security</Channel>
-                    <Computer>DESKTOP-JR78RLP</Computer>
+                    <Computer>DESKTOP-AIUEO</Computer>
                     <Security/>
                 </System>
                 <UserData>
                     <LogFileCleared xmlns='http://manifests.microsoft.com/win/2004/08/windows/eventlog'>
                         <SubjectUserSid>S-1-5-21-979008924-657238111-836329461-1002</SubjectUserSid>
                         <SubjectUserName>jwrig</SubjectUserName>
-                        <SubjectDomainName>DESKTOP-JR78RLP</SubjectDomainName>
+                        <SubjectDomainName>DESKTOP-AIUEO</SubjectDomainName>
                         <SubjectLogonId>0x30550</SubjectLogonId>
                     </LogFileCleared>
                 </UserData>
