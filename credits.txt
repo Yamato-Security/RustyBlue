@@ -1,4 +1,9 @@
 Zach Mathis (田中ザック）Yamato Security Yea! Project Leader
 kazuminn (@k2warugaki) Core Developer 
 itiB (@itiB_S144) Core Developer 
+<<<<<<< HEAD
 TAKIZAWA Hiroki (@hr_zwtk) Rule testing and supporter
+=======
+TAKIZAWA Hiroki (@hr_zwtk) Rule testing and supporter
+YAMAMOTO Masaya, supporter
+>>>>>>> 4341e994e2ace30018dbce6b4704815cab43fa61
