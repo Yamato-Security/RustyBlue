@@ -1,3 +1,5 @@
 Zach Mathis (田中ザック）Yamato Security Yea! Project Leader
-kazuminn (@k2warugaki) depelopper comitter
-itiB (@itiB_S144) developper, commiter
+kazuminn (@k2warugaki) Core Developer 
+itiB (@itiB_S144) Core Developer 
+TAKIZAWA Hiroki (@hr_zwtk) Rule testing and supporter
+YAMAMOTO Masaya, supporter
