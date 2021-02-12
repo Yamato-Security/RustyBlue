@@ -41,7 +41,7 @@ fn build_app() -> clap::App<'static, 'static> {
 
     App::new(program)
         .about("RustyBlue")
-        .version("0.0.1")
+        .version("1.0.0")
         .author("YamatoSecurity <info@yamatosecurity.com>")
         .setting(AppSettings::VersionlessSubcommands)
         .arg(Arg::from_usage(
