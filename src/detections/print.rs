@@ -6,6 +6,9 @@ impl MessageNotation {
     pub fn alert<W: Write>(w: &mut W, contents: String) -> io::Result<()> {
         writeln!(w, "[ERROR] {}", contents)
     }
+    pub fn warn<W: Write>(w: &mut W, contents: String) -> io::Result<()> {
+        writeln!(w, "[WARN] {}", contents)
+    }
     pub fn info_noheader<W: Write>(w: &mut W, contents: String) -> io::Result<()> {
         writeln!(w, "{}", contents)
     }
@@ -31,5 +34,13 @@ mod tests {
         let result = MessageNotation::info_noheader(&mut buf, format!("{}", input.to_string()));
         assert!(result.is_ok());
         assert_eq!(buf, b"info-test\n");
+    }
+    #[test]
+    fn test_warn_message() {
+        let mut buf = Vec::<u8>::new();
+        let input = "warn-test";
+        let result = MessageNotation::warn(&mut buf, format!("{}", input.to_string()));
+        assert!(result.is_ok());
+        assert_eq!(buf, b"[WARN] warn-test\n");
     }
 }
