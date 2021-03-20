@@ -1,3 +1,4 @@
+use crate::detections::print::MessageNotation;
 use crate::detections::utils;
 use crate::models::event;
 use std::collections::HashMap;
@@ -37,11 +38,18 @@ impl System {
         let commandline = &event_data.get("ImagePath").unwrap_or(&default);
         let text = utils::check_regex(&servicename, 1);
         if !text.is_empty() {
-            println!("Date    : {}", system_time);
-            println!("Message : New Service Created");
-            println!("Command : {}", commandline);
-            println!("Results : Service name: {}", servicename);
-            println!("Results : {}", text);
+            let stdout = std::io::stdout();
+            let mut stdout = stdout.lock();
+            MessageNotation::info_noheader(&mut stdout, format!("Date    : {}", system_time)).ok();
+            MessageNotation::info_noheader(&mut stdout, format!("Message : New Service Created"))
+                .ok();
+            MessageNotation::info_noheader(&mut stdout, format!("Command : {}", commandline)).ok();
+            MessageNotation::info_noheader(
+                &mut stdout,
+                format!("Results : Service name: {}", servicename),
+            )
+            .ok();
+            MessageNotation::info_noheader(&mut stdout, format!("Results : {}", text)).ok();
         }
         if !commandline.is_empty() {
             utils::check_command(7045, &commandline, 1000, 0, &servicename, &"", &system_time);
@@ -60,11 +68,35 @@ impl System {
 
         let default = String::from("");
         let servicename = &event_data.get("param1").unwrap_or(&default);
-        println!("Date    : {}", system_time);
-        println!("Message : Interactive service warning");
-        println!("Results : Service name: {}", servicename);
-        println!("Results : Malware (and some third party software) trigger this warning");
-        println!("{}", utils::check_regex(&servicename, 1));
+        let stdout = std::io::stdout();
+        let mut stdout = stdout.lock();
+        MessageNotation::info_noheader(&mut stdout, format!("Date    : {}", system_time)).ok();
+        MessageNotation::info_noheader(
+            &mut stdout,
+            format!("Message : Interactive service warning"),
+        )
+        .ok();
+        MessageNotation::info_noheader(
+            &mut stdout,
+            format!("Results : Service name: {}", servicename),
+        )
+        .ok();
+        MessageNotation::info_noheader(
+            &mut stdout,
+            format!("Results : Service name: {}", servicename),
+        )
+        .ok();
+
+        MessageNotation::info_noheader(
+            &mut stdout,
+            format!("Results : Malware (and some third party software) trigger this warning"),
+        )
+        .ok();
+        MessageNotation::info_noheader(
+            &mut stdout,
+            format!("{}", utils::check_regex(&servicename, 1)),
+        )
+        .ok();
     }
 
     fn suspicious_service_name(
@@ -81,10 +113,20 @@ impl System {
         let servicename = &event_data.get("param1").unwrap_or(&default);
         let text = utils::check_regex(&servicename, 1);
         if !text.is_empty() {
-            println!("Date    : {}", system_time);
-            println!("Message : Suspicious Service Name");
-            println!("Results : Service name: {}", servicename);
-            println!("Results : {}", text);
+            let stdout = std::io::stdout();
+            let mut stdout = stdout.lock();
+            MessageNotation::info_noheader(&mut stdout, format!("Date    : {}", system_time)).ok();
+            MessageNotation::info_noheader(
+                &mut stdout,
+                format!("Message : Suspicious Service Name"),
+            )
+            .ok();
+            MessageNotation::info_noheader(
+                &mut stdout,
+                format!("Results : Service name: {}", servicename),
+            )
+            .ok();
+            MessageNotation::info_noheader(&mut stdout, format!("Results : {}", text)).ok();
         }
     }
 
@@ -92,10 +134,15 @@ impl System {
         if event_id != "104" {
             return;
         }
-
-        println!("Date : {}", system_time);
-        println!("Message : System Log Clear");
-        println!("Results : The System log was cleared.");
+        let stdout = std::io::stdout();
+        let mut stdout = stdout.lock();
+        MessageNotation::info_noheader(&mut stdout, format!("Date : {}", system_time)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("Message : System Log Clear")).ok();
+        MessageNotation::info_noheader(
+            &mut stdout,
+            format!("Results : The System log was cleared."),
+        )
+        .ok();
     }
 
     fn windows_event_log(
@@ -110,19 +157,36 @@ impl System {
 
         if let Some(_param1) = event_data.get("param1") {
             if _param1 == "Windows Event Log" {
-                println!("Date : {}", system_time);
-                println!("Service name : {}", _param1);
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::info_noheader(&mut stdout, format!("Date : {}", system_time)).ok();
+                MessageNotation::info_noheader(&mut stdout, format!("Service name : {}", _param1))
+                    .ok();
                 if let Some(_param2) = event_data.get("param2") {
                     if _param2 == "disabled" {
-                        println!("Message : Event Log Service Stopped");
-                        println!(
-                            "Results : Selective event log manipulation may follow this event."
-                        );
+                        MessageNotation::info_noheader(
+                            &mut stdout,
+                            format!("Message : Event Log Service Stopped"),
+                        )
+                        .ok();
+                        MessageNotation::info_noheader(
+                            &mut stdout,
+                            format!(
+                                "Results : Selective event log manipulation may follow this event."
+                            ),
+                        )
+                        .ok();
                     } else if _param2 == "auto start" {
-                        println!("Message : Event Log Service Started");
-                        println!(
-                            "Results : Selective event log manipulation may precede this event."
-                        );
+                        MessageNotation::info_noheader(
+                            &mut stdout,
+                            format!("Message : Event Log Service Started"),
+                        )
+                        .ok();
+                        MessageNotation::info_noheader(
+                            &mut stdout,
+                            format!("Results : Selective event log manipulation may precede this event."),
+                        )
+                        .ok();
                     }
                 }
             }

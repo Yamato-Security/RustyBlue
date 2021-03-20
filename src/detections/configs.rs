@@ -1,3 +1,4 @@
+use crate::detections::print::MessageNotation;
 use clap::{App, AppSettings, Arg, ArgMatches};
 use std::fs::File;
 use std::io::prelude::*;
@@ -61,7 +62,13 @@ fn read_csv(filename: &str) -> Vec<Vec<String>> {
             }
         }
         Err(err) => {
-            println!("Error : {} not found , {}", filename, err);
+            let stdout = std::io::stdout();
+            let mut stdout = stdout.lock();
+            MessageNotation::alert(
+                &mut stdout,
+                format!("Error : {} not found , {}", filename, err),
+            )
+            .ok();
         }
     }
 
