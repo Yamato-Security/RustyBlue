@@ -60,7 +60,9 @@ impl Application {
                 }
             }
             None => {
-                println!("Warning: EMET Message field is blank. Install EMET locally to see full details of this alert");
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::warn(&mut stdout, format!("EMET Message field is blank. Install EMET locally to see full details of this alert")).ok();
             }
         }
     }
