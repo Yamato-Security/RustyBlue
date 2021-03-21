@@ -9,6 +9,8 @@ use std::{fs, path::PathBuf, process};
 fn main() {
     if let Some(filepath) = configs::singleton().args.value_of("filepath") {
         parse_file(&filepath.to_string());
+    } else if let Some(dirpath) = configs::singleton().args.value_of("directory") {
+        parse_dir(&dirpath.to_string());
     }
 
     if configs::singleton().args.is_present("credits") {
@@ -45,4 +47,15 @@ fn parse_file(filepath: &str) {
 
     let mut detection = detection::Detection::new();
     &detection.start(parser);
+}
+
+fn parse_dir(dirpath: &String) -> Vec<PathBuf> {
+    let input_dir = fs::read_dir(dirpath);
+    if input_dir.is_err() {
+        let stdout = std::io::stdout();
+        let mut stdout = stdout.lock();
+        MessageNotation::alert(&mut stdout, format!("{}", input_dir.unwrap_err())).ok();
+        return vec![];
+    }
+    return vec![];
 }
