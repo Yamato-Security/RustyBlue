@@ -10,7 +10,10 @@ fn main() {
     if let Some(filepath) = configs::singleton().args.value_of("filepath") {
         parse_file(&filepath.to_string());
     } else if let Some(dirpath) = configs::singleton().args.value_of("directory") {
-        parse_dir(&dirpath.to_string());
+        let target_paths = parse_dir(&dirpath.to_string());
+        for target_path in target_paths {
+            parse_file(&target_path.display().to_string());
+        }
     }
 
     if configs::singleton().args.is_present("credits") {
@@ -49,7 +52,7 @@ fn parse_file(filepath: &str) {
     &detection.start(parser);
 }
 
-fn parse_dir(dirpath: &String) -> Vec<PathBuf> {
+fn parse_dir(dirpath: &str) -> Vec<PathBuf> {
     let input_dir = fs::read_dir(dirpath);
     if input_dir.is_err() {
         let stdout = std::io::stdout();
@@ -57,5 +60,35 @@ fn parse_dir(dirpath: &String) -> Vec<PathBuf> {
         MessageNotation::alert(&mut stdout, format!("{}", input_dir.unwrap_err())).ok();
         return vec![];
     }
-    return vec![];
+    let mut ret = vec![];
+    for f in input_dir.unwrap() {
+        if f.is_err() {
+            continue;
+        }
+        let path = f.unwrap().path();
+        if path.is_dir() {
+            path.to_str().and_then(|path_str| {
+                let subdir_ret = parse_dir(path_str);
+                ret.extend(subdir_ret);
+                return Option::Some(());
+            });
+        } else {
+            let path_str = path.to_str().unwrap_or("");
+            if path_str.ends_with(".evtx") {
+                ret.push(path);
+            }
+        }
+    }
+    return ret;
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parse_dir;
+
+    #[test]
+    fn test_parse_dir_not_exists() {
+        let files = parse_dir("test_files/evtx/notfiles");
+        assert_eq!(0, files.len());
+    }
 }
