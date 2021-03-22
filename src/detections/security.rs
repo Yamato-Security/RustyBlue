@@ -1,3 +1,4 @@
+use crate::detections::print::MessageNotation;
 use crate::detections::utils;
 use crate::models::event;
 use std::collections::HashMap;
@@ -110,8 +111,12 @@ impl Security {
     }
 
     fn print_console(v: Vec<String>) -> Option<Vec<String>> {
-        v.iter().for_each(|s| println!("{}", s));
-        println!("\n");
+        let stdout = std::io::stdout();
+        let mut stdout = stdout.lock();
+        v.iter().for_each(|s| {
+            MessageNotation::info_noheader(&mut stdout, format!("{}", s)).ok();
+        });
+        MessageNotation::info_noheader(&mut stdout, format!("\n")).ok();
         return Option::Some(v);
     }
 
@@ -158,12 +163,35 @@ impl Security {
                 // alert_all_adminが有効であれば、標準出力して知らせる
                 // DeepBlueCLIでは必ず0になっていて、基本的には表示されない。
                 if self.alert_all_admin == 1 {
-                    println!("Date:{}", system_time);
-                    println!("Logon with SeDebugPrivilege (admin access)");
-                    println!("Username:{}", event_data["SubjectUserName"]);
-                    println!("Domain:{}", event_data["SubjectDomainName"]);
-                    println!("User SID:{}", event_data["SubjectUserSid"]);
-                    println!("Domain:{}", event_data["PrivilegeList"]);
+                    let stdout = std::io::stdout();
+                    let mut stdout = stdout.lock();
+                    MessageNotation::info_noheader(&mut stdout, format!("Date:{}", system_time))
+                        .ok();
+                    MessageNotation::info_noheader(
+                        &mut stdout,
+                        format!("Logon with SeDebugPrivilege (admin access)"),
+                    )
+                    .ok();
+                    MessageNotation::info_noheader(
+                        &mut stdout,
+                        format!("Username:{}", event_data["SubjectUserName"]),
+                    )
+                    .ok();
+                    MessageNotation::info_noheader(
+                        &mut stdout,
+                        format!("Domain:{}", event_data["SubjectDomainName"]),
+                    )
+                    .ok();
+                    MessageNotation::info_noheader(
+                        &mut stdout,
+                        format!("User SID:{}", event_data["SubjectUserSid"]),
+                    )
+                    .ok();
+                    MessageNotation::info_noheader(
+                        &mut stdout,
+                        format!("Domain:{}", event_data["PrivilegeList"]),
+                    )
+                    .ok();
                 }
 
                 self.total_admin_logons += 1;
@@ -442,6 +470,7 @@ mod tests {
     extern crate quick_xml;
 
     use crate::detections::security;
+    use crate::detections::security::MessageNotation;
     use crate::models::event;
 
     // 正しくヒットするパターン
@@ -450,7 +479,9 @@ mod tests {
         let xml_str = get_account_created_xml();
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
-                println!("{}", e.to_string());
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
             })
             .unwrap();
 
@@ -489,7 +520,9 @@ mod tests {
             get_account_created_xml().replace("<EventID>4720</EventID>", "<EventID>4721</EventID>");
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
-                println!("{}", e.to_string());
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
             })
             .unwrap();
 
@@ -529,7 +562,9 @@ mod tests {
         </Event>"#;
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
-                println!("{}", e.to_string());
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
             })
             .unwrap();
 
@@ -618,7 +653,9 @@ mod tests {
         let xml_str = get_add_member_security_group_xml();
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
-                println!("{}", e.to_string());
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
             })
             .unwrap();
 
@@ -657,7 +694,9 @@ mod tests {
             .replace(r"<EventID>4732</EventID>", r"<EventID>4728</EventID>");
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
-                println!("{}", e.to_string());
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
             })
             .unwrap();
 
@@ -696,7 +735,9 @@ mod tests {
             .replace(r"<EventID>4732</EventID>", r"<EventID>4756</EventID>");
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
-                println!("{}", e.to_string());
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
             })
             .unwrap();
 
@@ -735,7 +776,9 @@ mod tests {
             .replace(r"<EventID>4732</EventID>", r"<EventID>4757</EventID>");
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
-                println!("{}", e.to_string());
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
             })
             .unwrap();
 
@@ -757,7 +800,9 @@ mod tests {
         );
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
-                println!("{}", e.to_string());
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
             })
             .unwrap();
 
@@ -798,7 +843,9 @@ mod tests {
         </Event>"#;
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
-                println!("{}", e.to_string());
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
             })
             .unwrap();
 

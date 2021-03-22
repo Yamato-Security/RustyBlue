@@ -1,5 +1,6 @@
 extern crate regex;
 
+use crate::detections::print::MessageNotation;
 use crate::models::event;
 use regex::Regex;
 use std::collections::HashMap;
@@ -42,16 +43,26 @@ impl Application {
                     let re = Regex::new(r"^Application: ").unwrap();
                     let command = re.replace_all(application, "");
                     let username = message_split[4];
+                    let stdout = std::io::stdout();
+                    let mut stdout = stdout.lock();
 
-                    println!("Date    : {}", system.time_created.system_time);
-                    println!("Message EMET Block");
-                    println!("Command : {}", command);
-                    println!("Results : {}", text);
-                    println!("Results : {}", username);
+                    MessageNotation::info_noheader(
+                        &mut stdout,
+                        format!("Date    : {}", system.time_created.system_time),
+                    )
+                    .ok();
+                    MessageNotation::info_noheader(&mut stdout, format!("Message EMET Block")).ok();
+                    MessageNotation::info_noheader(&mut stdout, format!("Command : {}", command))
+                        .ok();
+                    MessageNotation::info_noheader(&mut stdout, format!("Results : {}", text)).ok();
+                    MessageNotation::info_noheader(&mut stdout, format!("Results : {}", username))
+                        .ok();
                 }
             }
             None => {
-                println!("Warning: EMET Message field is blank. Install EMET locally to see full details of this alert");
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::warn(&mut stdout, format!("EMET Message field is blank. Install EMET locally to see full details of this alert")).ok();
             }
         }
     }
