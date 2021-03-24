@@ -869,6 +869,7 @@ dependencies = [
  "csv",
  "evtx",
  "flate2",
+ "lazy_static",
  "quick-xml 0.17.2",
  "regex",
  "serde",

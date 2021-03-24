@@ -6,11 +6,11 @@ use rusty_blue::detections::detection;
 use std::{fs, path::PathBuf, process};
 
 fn main() {
-    if let Some(filepath) = configs::singleton().args.value_of("filepath") {
+    if let Some(filepath) = configs::CONFIG.args.value_of("filepath") {
         parse_file(&filepath.to_string());
     }
 
-    if configs::singleton().args.is_present("credits") {
+    if configs::CONFIG.args.is_present("credits") {
         print_credits();
     }
 }

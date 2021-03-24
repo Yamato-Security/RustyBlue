@@ -1,35 +1,59 @@
 use clap::{App, AppSettings, Arg, ArgMatches};
 use std::fs::File;
 use std::io::prelude::*;
-use std::sync::Once;
+use std::collections::HashMap;
+use regex::Regex;
+use lazy_static::lazy_static;
 
-#[derive(Clone)]
-pub struct SingletonReader {
-    pub regex: Vec<Vec<String>>,
-    pub whitelist: Vec<Vec<String>>,
-    pub args: ArgMatches<'static>,
+lazy_static! {
+    pub static ref CONFIG: ConfigReader = ConfigReader::new();
 }
 
-pub fn singleton() -> Box<SingletonReader> {
-    static mut SINGLETON: Option<Box<SingletonReader>> = Option::None;
-    static ONCE: Once = Once::new();
+#[derive(Clone)]
+pub struct ConfigReader {
+    pub regex: Vec<Vec<String>>,
+    pub args: ArgMatches<'static>,
+    pub application_regex: Regex,
+    pub applocker_regex: Regex,
+    pub powershell_hostapplication_regex: Regex,
+    pub powershell_line_feed_regex: Regex,
+    pub whitelist_regex: Vec<Regex>,
+    pub encode_regex: Regex,
+    pub encoded_command_regex: Regex,
+    pub base64_regex: Regex,
+    pub base64_with_before_after_regex: Regex,
+    pub singlequote_regex: Regex,
+    pub noalpha_regex: Regex,
+    pub nobinary_regex: Regex,
+    pub regexes: HashMap<String,Regex>,
+    pub compress_regex: Regex,
 
-    unsafe {
-        ONCE.call_once(|| {
-            let singleton = SingletonReader {
-                regex: read_csv("regexes.txt"),
-                whitelist: read_csv("whitelist.txt"),
-                args: build_app().get_matches(),
-            };
+}
 
-            SINGLETON = Some(Box::new(singleton));
-        });
-
-        return SINGLETON.clone().unwrap();
+impl ConfigReader {
+    pub fn new() -> Self {
+        ConfigReader {
+            regex: read_csv("regexes.txt"),
+            args: build_app(),
+            application_regex: Regex::new(r"^Application: ").unwrap(),
+            applocker_regex: Regex::new(r" was .*$").unwrap(),
+            powershell_hostapplication_regex: Regex::new("(?ms)^.*(ホスト アプリケーション|Host Application) = ").unwrap(),
+            powershell_line_feed_regex: Regex::new("(?ms)\n.*$").unwrap(),
+            whitelist_regex: get_whitelist_regex(read_csv("whitelist.txt")),
+            encode_regex: Regex::new(r"\-enc.*[A-Za-z0-9/+=]{100}").unwrap(),
+            encoded_command_regex: Regex::new(r"^.* \-Enc(odedCommand)? ").unwrap(),
+            base64_regex: Regex::new(r":FromBase64String\(").unwrap(),
+            base64_with_before_after_regex: Regex::new(r"^.*:FromBase64String\('*").unwrap(),
+            singlequote_regex: Regex::new(r"'.*$").unwrap(),
+            noalpha_regex: Regex::new(r"[a-z0-9/¥;:|.]").unwrap(),
+            nobinary_regex: Regex::new(r"[01]").unwrap(),
+            regexes: get_regexes(read_csv("regexes.txt")),
+            compress_regex: Regex::new(r"Compression.GzipStream.*Decompress").unwrap(),
+        }
     }
 }
 
-fn build_app() -> clap::App<'static, 'static> {
+fn build_app<'a>() -> ArgMatches<'a> {
     let program = std::env::args()
         .nth(0)
         .and_then(|s| {
@@ -38,6 +62,10 @@ fn build_app() -> clap::App<'static, 'static> {
                 .map(|s| s.to_string_lossy().into_owned())
         })
         .unwrap();
+
+    if is_test_mode() {
+        return ArgMatches::default();
+    }
 
     App::new(program)
         .about("RustyBlue")
@@ -48,6 +76,17 @@ fn build_app() -> clap::App<'static, 'static> {
             "-f --filepath=[FILEPATH] 'analyze event file'",
         ))
         .arg(Arg::from_usage("-c --credits 'print credits infomation'"))
+        .get_matches()
+}
+
+fn is_test_mode() -> bool {
+    for i in std::env::args() {
+        if i == "--test" {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 fn read_csv(filename: &str) -> Vec<Vec<String>> {
@@ -77,5 +116,62 @@ fn read_csv(filename: &str) -> Vec<Vec<String>> {
         ret.push(v);
     });
 
-    return ret;
+    ret
+}
+
+fn get_whitelist_regex(whitelist:Vec<Vec<String>>) -> Vec<Regex> {
+    
+    let empty = "".to_string();
+    let mut ret: Vec<Regex> = vec![];
+    for line in whitelist {
+        let r_str = line.get(0).unwrap_or(&empty);
+        if r_str.is_empty() {
+            continue;
+        }
+
+        ret.push(Regex::new(r_str).unwrap());
+    }
+    
+    ret
+}
+
+pub fn get_regexes(regexes:Vec<Vec<String>>) -> HashMap<String, Regex> {
+    let empty = "".to_string();
+    let mut ret: HashMap<String, Regex> = HashMap::new();
+    for line in regexes {
+        let regex_str = line.get(1).unwrap_or(&empty);
+        if regex_str.is_empty() {
+            continue;
+        }
+        
+        let re = Regex::new(regex_str);
+        if re.is_ok() {
+            ret.insert(regex_str.to_string(), re.unwrap());
+        }
+    }
+
+    ret
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::detections::configs;
+
+    // cargo test -- --test test_is_test_mode_true で実行
+    #[test]
+    #[ignore]
+    fn test_is_test_mode_true() {
+        assert_eq!(true, configs::is_test_mode());
+        assert_ne!(false, configs::is_test_mode());
+    }
+
+    // cargo test -- --test test_is_test_mode_false で実行
+    #[test]
+    #[ignore]
+    fn test_is_test_mode_false() {
+        assert_eq!(false, configs::is_test_mode());
+        assert_ne!(true, configs::is_test_mode());
+    }
+    
 }

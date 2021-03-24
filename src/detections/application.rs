@@ -1,7 +1,7 @@
 extern crate regex;
 
 use crate::models::event;
-use regex::Regex;
+use crate::detections::configs;
 use std::collections::HashMap;
 
 pub struct Application {}
@@ -39,8 +39,7 @@ impl Application {
                 if !message_split.is_empty() && message_split.len() >= 5 {
                     let text = message_split[0];
                     let application = message_split[3];
-                    let re = Regex::new(r"^Application: ").unwrap();
-                    let command = re.replace_all(application, "");
+                    let command = configs::CONFIG.application_regex.replace_all(application, "");
                     let username = message_split[4];
 
                     println!("Date    : {}", system.time_created.system_time);
