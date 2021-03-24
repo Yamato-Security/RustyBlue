@@ -9,9 +9,10 @@ use std::{fs, path::PathBuf, process};
 fn main() {
     if let Some(filepath) = configs::singleton().args.value_of("filepath") {
         parse_file(&filepath.to_string());
-    } else if let Some(dirpath) = configs::singleton().args.value_of("directory") {
+    } else if let Some(dirpath) = configs::singleton().args.value_of("dirpath") {
         let target_paths = parse_dir(&dirpath.to_string());
         for target_path in target_paths {
+            print!("{}", target_path.display().to_string());
             parse_file(&target_path.display().to_string());
         }
     }
