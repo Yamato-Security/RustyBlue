@@ -91,4 +91,18 @@ mod tests {
         let files = parse_dir("test_files/evtx/notfiles");
         assert_eq!(0, files.len());
     }
+
+    #[test]
+    fn test_parse_dir_exists() {
+        let files = parse_dir("test_files/evtx");
+        assert_eq!(3, files.len());
+        files.iter().for_each(|file| {
+            let is_contains = &vec!["test1.evtx", "test2.evtx", "testtest4.evtx"]
+                .into_iter()
+                .any(|filepath_str| {
+                    return file.file_name().unwrap().to_str().unwrap_or("") == filepath_str;
+                });
+            assert_eq!(is_contains, &true);
+        })
+    }
 }
