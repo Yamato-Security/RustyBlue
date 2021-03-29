@@ -21,7 +21,7 @@ pub fn check_command(
     let mut base64 = "".to_string();
 
     for regex in &configs::CONFIG.whitelist_regex {
-        if  regex.is_match(commandline) {
+        if regex.is_match(commandline) {
             return;
         }
     }
@@ -34,18 +34,27 @@ pub fn check_command(
     text.push_str(&check_obfu(commandline));
     text.push_str(&check_regex(commandline, 0));
     text.push_str(&check_creator(commandline, creator));
-    if configs::CONFIG.encode_regex.is_match(commandline)
-    {
-        base64.push_str(&configs::CONFIG.encoded_command_regex.replace_all(commandline, ""));
-    } else if configs::CONFIG.base64_regex.is_match(commandline)
-    {
-        base64.push_str(&configs::CONFIG.base64_with_before_after_regex.replace_all(commandline, ""));
-        base64.push_str(&configs::CONFIG.singlequote_regex.replace_all(&base64.to_string(), ""));
+    if configs::CONFIG.encode_regex.is_match(commandline) {
+        base64.push_str(
+            &configs::CONFIG
+                .encoded_command_regex
+                .replace_all(commandline, ""),
+        );
+    } else if configs::CONFIG.base64_regex.is_match(commandline) {
+        base64.push_str(
+            &configs::CONFIG
+                .base64_with_before_after_regex
+                .replace_all(commandline, ""),
+        );
+        base64.push_str(
+            &configs::CONFIG
+                .singlequote_regex
+                .replace_all(&base64.to_string(), ""),
+        );
     }
     if let Ok(decoded) = base64::decode(&base64) {
         if !base64.is_empty() {
-            if configs::CONFIG.compress_regex.is_match(commandline)
-            {
+            if configs::CONFIG.compress_regex.is_match(commandline) {
                 let mut d = GzDecoder::new(decoded.as_slice());
                 let mut uncompressed = String::new();
                 d.read_to_string(&mut uncompressed).unwrap();
@@ -80,8 +89,12 @@ fn check_obfu(string: &str) -> std::string::String {
     let mut minpercent = 0.65;
     let maxbinary = 0.50;
 
-    let noalphastring = configs::CONFIG.noalpha_regex.replace_all(&lowercasestring, "");
-    let nobinarystring = configs::CONFIG.nobinary_regex.replace_all(&lowercasestring, "");
+    let noalphastring = configs::CONFIG
+        .noalpha_regex
+        .replace_all(&lowercasestring, "");
+    let nobinarystring = configs::CONFIG
+        .nobinary_regex
+        .replace_all(&lowercasestring, "");
 
     if length > 0.0 {
         let mut percent = (length - noalphastring.len() as f64) / length;
@@ -122,7 +135,13 @@ pub fn check_regex(string: &str, r#type: usize) -> std::string::String {
             continue;
         }
 
-        if configs::CONFIG.regexes.get(regex_str).unwrap().is_match(string) == false {
+        if configs::CONFIG
+            .regexes
+            .get(regex_str)
+            .unwrap()
+            .is_match(string)
+            == false
+        {
             continue;
         }
 

@@ -1,7 +1,7 @@
 extern crate regex;
 
-use crate::models::event;
 use crate::detections::configs;
+use crate::models::event;
 use std::collections::HashMap;
 
 pub struct AppLocker {}
