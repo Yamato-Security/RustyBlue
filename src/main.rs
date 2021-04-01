@@ -12,8 +12,10 @@ fn main() {
     } else if let Some(dirpath) = configs::singleton().args.value_of("dirpath") {
         let target_paths = parse_dir(&dirpath.to_string());
         for target_path in target_paths {
+            println!("---------------------");
             print!("{}", target_path.display().to_string());
             parse_file(&target_path.display().to_string());
+            println!("---------------------");
         }
     }
 
