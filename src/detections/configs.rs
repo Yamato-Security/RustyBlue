@@ -48,6 +48,9 @@ fn build_app() -> clap::App<'static, 'static> {
         .arg(Arg::from_usage(
             "-f --filepath=[FILEPATH] 'analyze event file'",
         ))
+        .arg(Arg::from_usage(
+            "-d --dirpath=[DIRECTORYPATH] 'analyze event log files in directory'",
+        ))
         .arg(Arg::from_usage("-c --credits 'print credits infomation'"))
 }
 
