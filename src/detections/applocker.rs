@@ -1,6 +1,7 @@
 extern crate regex;
 
 use crate::detections::configs;
+use crate::detections::print::MessageNotation;
 use crate::models::event;
 use std::collections::HashMap;
 
@@ -30,9 +31,11 @@ impl AppLocker {
         let message = &system.message.as_ref().unwrap_or(&default);
         let command = configs::CONFIG.applocker_regex.replace_all(&message, "");
 
-        println!("Message Applocker Warning");
-        println!("Command : {}", command);
-        println!("Results : {}", message);
+        let stdout = std::io::stdout();
+        let mut stdout = stdout.lock();
+        MessageNotation::info_noheader(&mut stdout, format!("Message Applocker Warning")).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("Command : {}", command)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("Results : {}", message)).ok();
     }
 
     fn applocker_log_block(&mut self, event_id: &String, system: &event::System) {
@@ -44,8 +47,11 @@ impl AppLocker {
         let message = &system.message.as_ref().unwrap_or(&default);
         let command = configs::CONFIG.applocker_regex.replace_all(&message, "");
 
-        println!("Message Applocker Block");
-        println!("Command : {}", command);
-        println!("Results : {}", message);
+        let stdout = std::io::stdout();
+        let mut stdout = stdout.lock();
+
+        MessageNotation::info_noheader(&mut stdout, format!("Message Applocker Block")).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("Command : {}", command)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("Results : {}", message)).ok();
     }
 }

@@ -1,3 +1,4 @@
+use crate::detections::print::MessageNotation;
 use clap::{App, AppSettings, Arg, ArgMatches};
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -71,11 +72,14 @@ fn build_app<'a>() -> ArgMatches<'a> {
 
     App::new(program)
         .about("RustyBlue")
-        .version("0.0.1")
+        .version("1.0.0")
         .author("YamatoSecurity <info@yamatosecurity.com>")
         .setting(AppSettings::VersionlessSubcommands)
         .arg(Arg::from_usage(
             "-f --filepath=[FILEPATH] 'analyze event file'",
+        ))
+        .arg(Arg::from_usage(
+            "-d --dirpath=[DIRECTORYPATH] 'analyze event log files in directory'",
         ))
         .arg(Arg::from_usage("-c --credits 'print credits infomation'"))
         .get_matches()
@@ -102,7 +106,13 @@ fn read_csv(filename: &str) -> Vec<Vec<String>> {
             }
         }
         Err(err) => {
-            println!("Error : {} not found , {}", filename, err);
+            let stdout = std::io::stdout();
+            let mut stdout = stdout.lock();
+            MessageNotation::alert(
+                &mut stdout,
+                format!("Error : {} not found , {}", filename, err),
+            )
+            .ok();
         }
     }
 

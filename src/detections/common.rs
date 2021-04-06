@@ -1,3 +1,4 @@
+use crate::detections::print::MessageNotation;
 use crate::models::event;
 use std::collections::HashMap;
 
@@ -18,8 +19,14 @@ impl Common {
     }
 
     pub fn disp(&self) {
+        let stdout = std::io::stdout();
+        let mut stdout = stdout.lock();
         for (record_id, date) in self.record_id_list.iter() {
-            println!("date:{:?} record-id: {:?}", date, record_id);
+            MessageNotation::info_noheader(
+                &mut stdout,
+                format!("date:{:?} record-id: {:?}", date, record_id),
+            )
+            .ok();
         }
     }
 

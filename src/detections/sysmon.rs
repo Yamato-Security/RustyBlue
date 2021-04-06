@@ -1,3 +1,4 @@
+use crate::detections::print::MessageNotation;
 use crate::detections::utils::check_command;
 use crate::models::event;
 use std::collections::HashMap;
@@ -55,11 +56,21 @@ impl Sysmon {
             if _signed == "false" {
                 let _image = event_data.get("Image").unwrap_or(&default);
                 let _command_line = event_data.get("ImageLoaded").unwrap_or(&default);
-
-                println!("Date : {}", system_time);
-                println!("Message : Unsigned Image (DLL)");
-                println!("Result  : Loaded by: {}", _image);
-                println!("Command : {}", _command_line);
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::info_noheader(&mut stdout, format!("Date : {}", system_time)).ok();
+                MessageNotation::info_noheader(
+                    &mut stdout,
+                    format!("Message : Unsigned Image (DLL)"),
+                )
+                .ok();
+                MessageNotation::info_noheader(
+                    &mut stdout,
+                    format!("Result  : Loaded by: {}", _image),
+                )
+                .ok();
+                MessageNotation::info_noheader(&mut stdout, format!("Command : {}", _command_line))
+                    .ok();
             }
         };
     }

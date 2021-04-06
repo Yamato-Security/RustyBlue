@@ -5,6 +5,7 @@ use crate::detections::application;
 use crate::detections::applocker;
 use crate::detections::common;
 use crate::detections::powershell;
+use crate::detections::print::MessageNotation;
 use crate::detections::security;
 use crate::detections::sysmon;
 use crate::detections::system;
@@ -67,10 +68,18 @@ impl Detection {
                                 //&other.detection();
                             }
                         }
-                        Err(err) => println!("{}", err),
+                        Err(err) => {
+                            let stdout = std::io::stdout();
+                            let mut stdout = stdout.lock();
+                            MessageNotation::alert(&mut stdout, format!("{}", err)).ok();
+                        }
                     }
                 }
-                Err(e) => eprintln!("{}", e),
+                Err(e) => {
+                    let stdout = std::io::stdout();
+                    let mut stdout = stdout.lock();
+                    MessageNotation::alert(&mut stdout, format!("{}", e)).ok();
+                }
             }
         }
 

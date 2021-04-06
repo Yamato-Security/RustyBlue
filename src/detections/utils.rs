@@ -3,6 +3,7 @@ extern crate csv;
 extern crate regex;
 
 use crate::detections::configs;
+use crate::detections::print::MessageNotation;
 use flate2::read::GzDecoder;
 use std::io::prelude::*;
 use std::str;
@@ -57,11 +58,20 @@ pub fn check_command(
             if configs::CONFIG.compress_regex.is_match(commandline) {
                 let mut d = GzDecoder::new(decoded.as_slice());
                 let mut uncompressed = String::new();
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
                 d.read_to_string(&mut uncompressed).unwrap();
-                println!("Decoded : {}", uncompressed);
+                MessageNotation::info_noheader(&mut stdout, format!("Decoded : {}", uncompressed))
+                    .ok();
                 text.push_str("Base64-encoded and compressed function\n");
             } else {
-                println!("Decoded : {}", str::from_utf8(decoded.as_slice()).unwrap());
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::info_noheader(
+                    &mut stdout,
+                    format!("Decoded : {}", str::from_utf8(decoded.as_slice()).unwrap()),
+                )
+                .ok();
                 text.push_str("Base64-encoded function\n");
                 text.push_str(&check_obfu(str::from_utf8(decoded.as_slice()).unwrap()));
                 text.push_str(&check_regex(str::from_utf8(decoded.as_slice()).unwrap(), 0));
@@ -69,16 +79,30 @@ pub fn check_command(
         }
     }
     if !text.is_empty() {
-        println!("Date : {}", system_time);
-        println!("EventID : {}", event_id);
+        let stdout = std::io::stdout();
+        let mut stdout = stdout.lock();
+        MessageNotation::info_noheader(&mut stdout, format!("Date : {}", system_time)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("EventID : {}", event_id)).ok();
         if servicecmd != 0 {
-            println!("Message : Suspicious Service Command");
-            println!("Results : Service name: {}\n", servicename);
+            MessageNotation::info_noheader(
+                &mut stdout,
+                format!("Message : Suspicious Service Command"),
+            )
+            .ok();
+            MessageNotation::info_noheader(
+                &mut stdout,
+                format!("Results : Service name: {}\n", servicename),
+            )
+            .ok();
         } else {
-            println!("Message : Suspicious Command Line");
+            MessageNotation::info_noheader(
+                &mut stdout,
+                format!("Message : Suspicious Command Line"),
+            )
+            .ok();
         }
-        println!("command : {}", commandline);
-        println!("result : {}", text);
+        MessageNotation::info_noheader(&mut stdout, format!("command : {}", commandline)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("result : {}", text)).ok();
     }
 }
 
