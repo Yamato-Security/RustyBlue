@@ -1,6 +1,6 @@
+use crate::detections::configs;
 use crate::detections::utils;
 use crate::models::event;
-use regex::Regex;
 use std::collections::HashMap;
 
 pub struct PowerShell {}
@@ -36,12 +36,12 @@ impl PowerShell {
         if commandline.contains("Host Application")
             || commandline.contains("ホスト アプリケーション")
         {
-            let rm_before =
-                Regex::new("(?ms)^.*(ホスト アプリケーション|Host Application) = ").unwrap();
-            let rm_after = Regex::new("(?ms)\n.*$").unwrap();
-
-            let temp_command_with_extra = rm_before.replace_all(commandline, "");
-            let command = rm_after.replace_all(&temp_command_with_extra, "");
+            let temp_command_with_extra = configs::CONFIG
+                .powershell_hostapplication_regex
+                .replace_all(commandline, "");
+            let command = configs::CONFIG
+                .powershell_line_feed_regex
+                .replace_all(&temp_command_with_extra, "");
 
             if command != "" {
                 utils::check_command(4103, &command, 1000, 0, &default, &default, &system_time);

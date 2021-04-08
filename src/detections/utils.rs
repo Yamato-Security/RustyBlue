@@ -5,7 +5,6 @@ extern crate regex;
 use crate::detections::configs;
 use crate::detections::print::MessageNotation;
 use flate2::read::GzDecoder;
-use regex::Regex;
 use std::io::prelude::*;
 use std::str;
 use std::string::String;
@@ -22,15 +21,8 @@ pub fn check_command(
     let mut text = "".to_string();
     let mut base64 = "".to_string();
 
-    let empty = "".to_string();
-    for line in configs::singleton().whitelist {
-        let r_str = line.get(0).unwrap_or(&empty);
-        if r_str.is_empty() {
-            continue;
-        }
-
-        let r = Regex::new(r_str);
-        if r.is_ok() && r.unwrap().is_match(commandline) {
+    for regex in &configs::CONFIG.whitelist_regex {
+        if regex.is_match(commandline) {
             return;
         }
     }
@@ -43,27 +35,27 @@ pub fn check_command(
     text.push_str(&check_obfu(commandline));
     text.push_str(&check_regex(commandline, 0));
     text.push_str(&check_creator(commandline, creator));
-    if Regex::new(r"\-enc.*[A-Za-z0-9/+=]{100}")
-        .unwrap()
-        .is_match(commandline)
-    {
-        let re = Regex::new(r"^.* \-Enc(odedCommand)? ").unwrap();
-        base64.push_str(&re.replace_all(commandline, ""));
-    } else if Regex::new(r":FromBase64String\(")
-        .unwrap()
-        .is_match(commandline)
-    {
-        let re = Regex::new(r"^.*:FromBase64String\('*").unwrap();
-        base64.push_str(&re.replace_all(commandline, ""));
-        let re = Regex::new(r"'.*$").unwrap();
-        base64.push_str(&re.replace_all(&base64.to_string(), ""));
+    if configs::CONFIG.encode_regex.is_match(commandline) {
+        base64.push_str(
+            &configs::CONFIG
+                .encoded_command_regex
+                .replace_all(commandline, ""),
+        );
+    } else if configs::CONFIG.base64_regex.is_match(commandline) {
+        base64.push_str(
+            &configs::CONFIG
+                .base64_with_before_after_regex
+                .replace_all(commandline, ""),
+        );
+        base64.push_str(
+            &configs::CONFIG
+                .singlequote_regex
+                .replace_all(&base64.to_string(), ""),
+        );
     }
     if let Ok(decoded) = base64::decode(&base64) {
         if !base64.is_empty() {
-            if Regex::new(r"Compression.GzipStream.*Decompress")
-                .unwrap()
-                .is_match(commandline)
-            {
+            if configs::CONFIG.compress_regex.is_match(commandline) {
                 let mut d = GzDecoder::new(decoded.as_slice());
                 let mut uncompressed = String::new();
                 let stdout = std::io::stdout();
@@ -121,11 +113,12 @@ fn check_obfu(string: &str) -> std::string::String {
     let mut minpercent = 0.65;
     let maxbinary = 0.50;
 
-    let mut re = Regex::new(r"[a-z0-9/¥;:|.]").unwrap();
-    let noalphastring = re.replace_all(&lowercasestring, "");
-
-    re = Regex::new(r"[01]").unwrap();
-    let nobinarystring = re.replace_all(&lowercasestring, "");
+    let noalphastring = configs::CONFIG
+        .noalpha_regex
+        .replace_all(&lowercasestring, "");
+    let nobinarystring = configs::CONFIG
+        .nobinary_regex
+        .replace_all(&lowercasestring, "");
 
     if length > 0.0 {
         let mut percent = (length - noalphastring.len() as f64) / length;
@@ -155,7 +148,7 @@ fn check_obfu(string: &str) -> std::string::String {
 pub fn check_regex(string: &str, r#type: usize) -> std::string::String {
     let empty = "".to_string();
     let mut regextext = "".to_string();
-    for line in configs::singleton().regex {
+    for line in &configs::CONFIG.regex {
         let type_str = line.get(0).unwrap_or(&empty);
         if type_str != &r#type.to_string() {
             continue;
@@ -166,8 +159,13 @@ pub fn check_regex(string: &str, r#type: usize) -> std::string::String {
             continue;
         }
 
-        let re = Regex::new(regex_str);
-        if re.is_err() || re.unwrap().is_match(string) == false {
+        if configs::CONFIG
+            .regexes
+            .get(regex_str)
+            .unwrap()
+            .is_match(string)
+            == false
+        {
             continue;
         }
 
