@@ -1,0 +1,67 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rusty_blue'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rusty_blue"
+                ],
+                "filter": {
+                    "name": "rusty_blue",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'rusty_blue'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=rusty_blue",
+                    "--package=rusty_blue"
+                ],
+                "filter": {
+                    "name": "rusty_blue",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "-f",
+                "D:\\Tosada31\\proj\\yamatosec\\evtx\\samples\\system.evtx"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'rusty_blue'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rusty_blue",
+                    "--package=rusty_blue"
+                ],
+                "filter": {
+                    "name": "rusty_blue",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
