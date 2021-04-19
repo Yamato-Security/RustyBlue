@@ -54,16 +54,53 @@ impl Detection {
                                     &event.user_data,
                                     event_data,
                                 );
+                                match &*event_id {
+                                    "7030" | "7036" | "7045" | "7040" | "104" => {
+                                        println!("Detected Events : Security id {}", event_id)
+                                    }
+                                    _ => println!("Not Found Events_id {}", event_id),
+                                }
                             } else if channel == "System" {
                                 &system.detection(event_id, &event.system, event_data);
+                                match &*event_id {
+                                    "4688" | "4672" | "4720" | "4728" | "4732" | "4756"
+                                    | "4625" | "4673" | "4674" | "4648" | "1102" => {
+                                        println!("Detected Events : System id {}", event_id)
+                                    }
+                                    _ => println!("Not Found Events_id {}", event_id),
+                                }
                             } else if channel == "Application" {
                                 &application.detection(event_id, &event.system, event_data);
+                                match &*event_id {
+                                    "2" => {
+                                        println!("Detected Events : Application id {}", event_id)
+                                    }
+                                    _ => println!("Not Found Events_id {}", event_id),
+                                }
                             } else if channel == "Microsoft-Windows-PowerShell/Operational" {
                                 &powershell.detection(event_id, &event.system, event_data);
+                                match &*event_id {
+                                    "8003" | "8004" | "8006" | "8007" => {
+                                        println!("Detected Events : AppLocker id {}", event_id)
+                                    }
+                                    _ => println!("Not Found Events_id {}", event_id),
+                                }
                             } else if channel == "Microsoft-Windows-Sysmon/Operational" {
                                 &sysmon.detection(event_id, &event.system, event_data);
+                                match &*event_id {
+                                    "4103" | "4104" => {
+                                        println!("Detected Events : PowerShell id {}", event_id)
+                                    }
+                                    _ => println!("Not Found Events_id {}", event_id),
+                                }
                             } else if channel == "Microsoft-Windows-AppLocker/EXE and DLL" {
                                 &applocker.detection(event_id, &event.system, event_data);
+                                match &*event_id {
+                                    "1" | "7" => {
+                                        println!("Detected Events : Sysmon id {}", event_id)
+                                    }
+                                    _ => println!("Not Found Events_id {}", event_id),
+                                }
                             } else {
                                 //&other.detection();
                             }
