@@ -19,6 +19,11 @@ pub struct Detection {
     timeline_list: BTreeMap<String, String>,
 }
 
+#[derive(Debug)]
+struct ExampleCopyTraitImpl {
+    n: std::string::String,
+}
+
 impl Detection {
     pub fn new() -> Detection {
         Detection {
@@ -41,65 +46,58 @@ impl Detection {
                     match quick_xml::de::from_str(&r.data) {
                         Ok(event) => {
                             let event: event::Evtx = event;
-
                             let event_id = event.system.event_id.to_string();
                             let channel = event.system.channel.to_string();
                             let event_data = event.parse_event_data();
 
                             &common.detection(&event.system, &event_data);
                             if channel == "Security" {
-                                &security.detection(
-                                    event_id,
-                                    &event.system,
-                                    &event.user_data,
-                                    event_data,
-                                );
-                                match &*event_id {
+                                match event_id.as_str() {
                                     "7030" | "7036" | "7045" | "7040" | "104" => {
-                                        println!("Detected Events : Security id {}", event_id)
+                                        &security.detection(
+                                            event_id,
+                                            &event.system,
+                                            &event.user_data,
+                                            event_data,
+                                        );
                                     }
-                                    _ => println!("Not Found Events_id {}", event_id),
+                                    _ => println!("Not Match is Event ID Num:{}", event_id),
                                 }
                             } else if channel == "System" {
-                                &system.detection(event_id, &event.system, event_data);
-                                match &*event_id {
+                                match event_id.as_str() {
                                     "4688" | "4672" | "4720" | "4728" | "4732" | "4756"
                                     | "4625" | "4673" | "4674" | "4648" | "1102" => {
-                                        println!("Detected Events : System id {}", event_id)
+                                        &system.detection(event_id, &event.system, event_data);
                                     }
-                                    _ => println!("Not Found Events_id {}", event_id),
+                                    _ => println!("Not Match is Event ID Num:{}", event_id),
                                 }
                             } else if channel == "Application" {
-                                &application.detection(event_id, &event.system, event_data);
-                                match &*event_id {
+                                match event_id.as_str() {
                                     "2" => {
-                                        println!("Detected Events : Application id {}", event_id)
+                                        &application.detection(event_id, &event.system, event_data);
                                     }
-                                    _ => println!("Not Found Events_id {}", event_id),
+                                    _ => println!("Not Match is Event ID Num:{}", event_id),
                                 }
                             } else if channel == "Microsoft-Windows-PowerShell/Operational" {
-                                &powershell.detection(event_id, &event.system, event_data);
-                                match &*event_id {
+                                match event_id.as_str() {
                                     "8003" | "8004" | "8006" | "8007" => {
-                                        println!("Detected Events : AppLocker id {}", event_id)
+                                        &powershell.detection(event_id, &event.system, event_data);
                                     }
-                                    _ => println!("Not Found Events_id {}", event_id),
+                                    _ => println!("Not Match is Event ID Num:{}", event_id),
                                 }
                             } else if channel == "Microsoft-Windows-Sysmon/Operational" {
-                                &sysmon.detection(event_id, &event.system, event_data);
-                                match &*event_id {
+                                match event_id.as_str() {
                                     "4103" | "4104" => {
-                                        println!("Detected Events : PowerShell id {}", event_id)
+                                        &sysmon.detection(event_id, &event.system, event_data);
                                     }
-                                    _ => println!("Not Found Events_id {}", event_id),
+                                    _ => println!("Not Match is Event ID Num:{}", event_id),
                                 }
                             } else if channel == "Microsoft-Windows-AppLocker/EXE and DLL" {
-                                &applocker.detection(event_id, &event.system, event_data);
-                                match &*event_id {
+                                match event_id.as_str() {
                                     "1" | "7" => {
-                                        println!("Detected Events : Sysmon id {}", event_id)
+                                        &applocker.detection(event_id, &event.system, event_data);
                                     }
-                                    _ => println!("Not Found Events_id {}", event_id),
+                                    _ => println!("Not Match is Event ID Num:{}", event_id),
                                 }
                             } else {
                                 //&other.detection();
