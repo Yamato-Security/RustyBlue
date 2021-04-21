@@ -2,3 +2,4 @@
 /samples
 *.test
 .DS_Store
+.vscode/

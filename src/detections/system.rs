@@ -17,11 +17,15 @@ impl System {
         system: &event::System,
         event_data: HashMap<String, String>,
     ) {
-        self.system_log_clear(&event_id, &system.time_created.system_time).and_then(System::print_console);
+        self.system_log_clear(&event_id, &system.time_created.system_time)
+            .and_then(System::print_console);
         self.windows_event_log(&event_id, &event_data, &system.time_created.system_time);
-        self.new_service_created(&event_id, &event_data, &system.time_created.system_time).and_then(System::print_console);
-        self.interactive_service_warning(&event_id, &event_data, &system.time_created.system_time).and_then(System::print_console);
-        self.suspicious_service_name(&event_id, &event_data, &system.time_created.system_time).and_then(System::print_console);
+        self.new_service_created(&event_id, &event_data, &system.time_created.system_time)
+            .and_then(System::print_console);
+        self.interactive_service_warning(&event_id, &event_data, &system.time_created.system_time)
+            .and_then(System::print_console);
+        self.suspicious_service_name(&event_id, &event_data, &system.time_created.system_time)
+            .and_then(System::print_console);
     }
 
     fn print_console(v: Vec<String>) -> Option<Vec<String>> {
@@ -39,7 +43,7 @@ impl System {
         event_id: &String,
         event_data: &HashMap<String, String>,
         system_time: &String,
-    ) -> Option<Vec<String>>  {
+    ) -> Option<Vec<String>> {
         if event_id != "7045" {
             return Option::None;
         }
@@ -67,7 +71,7 @@ impl System {
         event_id: &String,
         event_data: &HashMap<String, String>,
         system_time: &String,
-    ) -> Option<Vec<String>>  {
+    ) -> Option<Vec<String>> {
         if event_id != "7030" {
             return Option::None;
         }
@@ -78,7 +82,9 @@ impl System {
         msges.push(format!("Date    : {}", system_time));
         msges.push("Message : Interactive service warning".to_string());
         msges.push(format!("Results : Service name: {}", servicename));
-        msges.push("Results : Malware (and some third party software) trigger this warning".to_string());
+        msges.push(
+            "Results : Malware (and some third party software) trigger this warning".to_string(),
+        );
         msges.push(format!("{}", utils::check_regex(&servicename, 1)));
         return Option::Some(msges);
     }
@@ -88,7 +94,7 @@ impl System {
         event_id: &String,
         event_data: &HashMap<String, String>,
         system_time: &String,
-    ) -> Option<Vec<String>>  {
+    ) -> Option<Vec<String>> {
         if event_id != "7036" {
             return Option::None;
         }
@@ -136,12 +142,14 @@ impl System {
                     if _param2 == "disabled" {
                         msges.push("Message : Event Log Service Stopped".to_string());
                         msges.push(
-                            "Results : Selective event log manipulation may follow this event.".to_string()
+                            "Results : Selective event log manipulation may follow this event."
+                                .to_string(),
                         );
                     } else if _param2 == "auto start" {
                         msges.push("Message : Event Log Service Started".to_string());
                         msges.push(
-                            "Results : Selective event log manipulation may precede this event.".to_string()
+                            "Results : Selective event log manipulation may precede this event."
+                                .to_string(),
                         );
                     }
                 }
@@ -150,6 +158,7 @@ impl System {
         return Option::Some(msges);
     }
 }
+
 #[cfg(test)]
 mod tests {
     extern crate quick_xml;
@@ -193,8 +202,29 @@ mod tests {
         assert_eq!(Option::None, ite.next());
     }
 
+    // eventidが異なりヒットしないパターン
     #[test]
-    fn test_new_service_created(){
+    fn test_system_log_clear_noteq_eventid() {
+        let xml_str = get_system_log_clear_xml()
+            .replace(r"<EventID>104</EventID>", r"<EventID>105</EventID>");
+        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
+            .map_err(|e| {
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+            })
+            .unwrap();
+
+        let mut sys = system::System::new();
+        let option_v = sys.system_log_clear(
+            &event.system.event_id.to_string(),
+            &event.system.time_created.system_time,
+        );
+        assert_eq!(Option::None, option_v);
+    }
+
+    #[test]
+    fn test_new_service_created() {
         let xml_str = get_system_service_created_xml();
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
@@ -210,12 +240,10 @@ mod tests {
             &event.parse_event_data(),
             &event.system.time_created.system_time,
         );
-        println!("eventid : {}", &event.system.event_id.to_string());
-        println!("system_time : {}", &event.system.time_created.system_time.to_string());
         let v = option_v.unwrap();
         let mut ite = v.iter();
         assert_eq!(
-            &"Date : 2019-04-27 21:04:25.733401 UTC".to_string(),
+            &"Date : 2017-07-12 17:16:29.401630 UTC".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -223,22 +251,118 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Command : %SystemRoot%\\system32\\vmicsvc.exe -feature Heartbeat".to_string(),
+            &"Command : \\SystemRoot\\System32\\drivers\\WUDFRd.sys".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Results : Service name: Hyper-V Heartbeat Service".to_string(),
+            &"Results : Service name: ijklmnopIJKLMNOP".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Results : ".to_string(),
+            &"Results : Metasploit-style service name: 16 characters\n".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(Option::None, ite.next());
+    }
+
+    // eventidが異なりヒットしないパターン
+    #[test]
+    fn test_new_service_created_noteq_eventid() {
+        let xml_str = get_system_service_created_xml()
+            .replace(r"<EventID>7045</EventID>", r"<EventID>7046</EventID>");
+        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
+            .map_err(|e| {
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+            })
+            .unwrap();
+
+        let mut sys = system::System::new();
+        let option_v = sys.new_service_created(
+            &event.system.event_id.to_string(),
+            &event.parse_event_data(),
+            &event.system.time_created.system_time,
+        );
+        assert_eq!(Option::None, option_v);
+    }
+
+    // cmdlineがセットされていないパターン
+    #[test]
+    fn test_new_service_created_cmdline_notset() {
+        let xml_str = r#"
+        <?xml version="1.0" encoding="utf-8"?>
+        <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+          <System>
+            <Provider Name="Service Control Manager" Guid="{555908d1-a6d7-4695-8e1e-26931d2012f4}" EventSourceName="Service Control Manager">
+            </Provider>
+            <EventID>7045</EventID>
+            <Version>0</Version>
+            <Level>4</Level>
+            <Task>0</Task>
+            <Opcode>0</Opcode>
+            <Keywords>0x8080000000000000</Keywords>
+            <TimeCreated SystemTime="2017-07-12 17:16:29.401630 UTC">
+            </TimeCreated>
+            <EventRecordID>45</EventRecordID>
+            <Correlation>
+            </Correlation>
+            <Execution ProcessID="620" ThreadID="1796">
+            </Execution>
+            <Channel>System</Channel>
+            <Computer>WIN-P4SIAA0SQCO</Computer>
+            <Security UserID="S-1-5-18">
+            </Security>
+          </System>
+          <EventData>
+            <Data Name="ServiceName">ijklmnopIJKLMNOP</Data>
+            <Data Name="ServiceType">kernel mode driver</Data>
+            <Data Name="StartType">demand start</Data>
+            <Data Name="AccountName"></Data>
+          </EventData>
+        </Event>""#;
+
+        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
+            .map_err(|e| {
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+            })
+            .unwrap();
+
+        let mut sys = system::System::new();
+        let option_v = sys.new_service_created(
+            &event.system.event_id.to_string(),
+            &event.parse_event_data(),
+            &event.system.time_created.system_time,
+        );
+        let v = option_v.unwrap();
+        let mut ite = v.iter();
+        assert_eq!(
+            &"Date : 2017-07-12 17:16:29.401630 UTC".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Message : New Service Created".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Command : ".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Results : Service name: ijklmnopIJKLMNOP".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Results : Metasploit-style service name: 16 characters\n".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(Option::None, ite.next());
     }
 
     #[test]
-    fn test_interactive_service_warning(){
+    fn test_interactive_service_warning() {
         let xml_str = get_interactive_service_warning();
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
@@ -271,15 +395,34 @@ mod tests {
             &"Results : Malware (and some third party software) trigger this warning".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
-        assert_eq!(
-            &"".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
+        assert_eq!(&"".to_string(), ite.next().unwrap_or(&"".to_string()));
         assert_eq!(Option::None, ite.next());
     }
 
+    // eventidが異なりヒットしないパターン
     #[test]
-    fn test_suspicious_service_name(){
+    fn test_interactive_service_warning_noteq_eventid() {
+        let xml_str = get_interactive_service_warning()
+            .replace(r"<EventID>7030</EventID>", r"<EventID>7031</EventID>");
+        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
+            .map_err(|e| {
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+            })
+            .unwrap();
+
+        let mut sys = system::System::new();
+        let option_v = sys.interactive_service_warning(
+            &event.system.event_id.to_string(),
+            &event.parse_event_data(),
+            &event.system.time_created.system_time,
+        );
+        assert_eq!(Option::None, option_v);
+    }
+
+    #[test]
+    fn test_suspicious_service_name() {
         let xml_str = get_suspicious_service_name();
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
@@ -305,18 +448,40 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Results : Service name: Printer Extensions and Notifications".to_string(),
+            &"Results : Service name: abcdefghABCDEFGH".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Results : ".to_string(),
+            &"Results : Metasploit-style service name: 16 characters\n".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
-        assert_eq!(Option::None, ite.next()); 
+        assert_eq!(Option::None, ite.next());
+    }
+
+    // eventidが異なりヒットしないパターン
+    #[test]
+    fn test_suspicious_service_name_noteq_eventid() {
+        let xml_str = get_suspicious_service_name()
+            .replace(r"<EventID>7036</EventID>", r"<EventID>7037</EventID>");
+        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
+            .map_err(|e| {
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+            })
+            .unwrap();
+
+        let mut sys = system::System::new();
+        let option_v = sys.suspicious_service_name(
+            &event.system.event_id.to_string(),
+            &event.parse_event_data(),
+            &event.system.time_created.system_time,
+        );
+        assert_eq!(Option::None, option_v);
     }
 
     #[test]
-    fn test_windows_event_log(){
+    fn test_windows_event_log() {
         let xml_str = get_windows_event_log();
         let event: event::Evtx = quick_xml::de::from_str(&xml_str)
             .map_err(|e| {
@@ -349,7 +514,96 @@ mod tests {
             &"Results : Selective event log manipulation may follow this event.".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
-        assert_eq!(Option::None, ite.next()); 
+        assert_eq!(Option::None, ite.next());
+    }
+
+    #[test]
+    fn test_windows_event_log_auto_start() {
+        let xml_str = r#"
+        <?xml version="1.0" encoding="utf-8"?>
+        <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+          <System>
+            <Provider Name="Service Control Manager" Guid="{555908d1-a6d7-4695-8e1e-26931d2012f4}" EventSourceName="Service Control Manager">
+            </Provider>
+            <EventID>7040</EventID>
+            <Version>0</Version>
+            <Level>4</Level>
+            <Task>0</Task>
+            <Opcode>0</Opcode>
+            <Keywords>0x8080000000000000</Keywords>
+            <TimeCreated SystemTime="2017-07-12 07:20:03.875567 UTC">
+            </TimeCreated>
+            <EventRecordID>242</EventRecordID>
+            <Correlation>
+            </Correlation>
+            <Execution ProcessID="616" ThreadID="1608">
+            </Execution>
+            <Channel>System</Channel>
+            <Computer>DESKTOP-2KGM189</Computer>
+            <Security UserID="S-1-5-18">
+            </Security>
+          </System>
+          <EventData>
+            <Data Name="param1">Windows Event Log</Data>
+            <Data Name="param2">auto start</Data>
+            <Data Name="param3">auto start</Data>
+            <Data Name="param4">BITS</Data>
+          </EventData>
+        </Event>"#.to_string();
+        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
+            .map_err(|e| {
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+            })
+            .unwrap();
+        let mut sys = system::System::new();
+        let option_v = sys.windows_event_log(
+            &event.system.event_id.to_string(),
+            &event.parse_event_data(),
+            &event.system.time_created.system_time,
+        );
+        let v = option_v.unwrap();
+        let mut ite = v.iter();
+        assert_eq!(
+            &"Date    : 2017-07-12 07:20:03.875567 UTC".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Service name : Windows Event Log".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Message : Event Log Service Started".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Results : Selective event log manipulation may precede this event.".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(Option::None, ite.next());
+    }
+
+    // eventidが異なりヒットしないパターン
+    #[test]
+    fn test_windows_event_log_noteq_eventid() {
+        let xml_str =
+            get_windows_event_log().replace(r"<EventID>7040</EventID>", r"<EventID>7041</EventID>");
+        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
+            .map_err(|e| {
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+            })
+            .unwrap();
+
+        let mut sys = system::System::new();
+        let option_v = sys.windows_event_log(
+            &event.system.event_id.to_string(),
+            &event.parse_event_data(),
+            &event.system.time_created.system_time,
+        );
+        assert_eq!(Option::None, option_v);
     }
 
     fn get_system_log_clear_xml() -> String {
@@ -387,7 +641,7 @@ mod tests {
           </UserData>
         </Event>"#.to_string();
     }
-    
+
     fn get_system_service_created_xml() -> String {
         return r#"
         <?xml version="1.0" encoding="utf-8"?>
@@ -395,7 +649,7 @@ mod tests {
           <System>
             <Provider Name="Service Control Manager" Guid="{555908d1-a6d7-4695-8e1e-26931d2012f4}" EventSourceName="Service Control Manager">
             </Provider>
-            <EventID Qualifiers="16384">7045</EventID>
+            <EventID>7045</EventID>
             <Version>0</Version>
             <Level>4</Level>
             <Task>0</Task>
@@ -414,7 +668,7 @@ mod tests {
             </Security>
           </System>
           <EventData>
-            <Data Name="ServiceName">UMDF Reflector service for Sensors HID Class Driver</Data>
+            <Data Name="ServiceName">ijklmnopIJKLMNOP</Data>
             <Data Name="ImagePath">\SystemRoot\System32\drivers\WUDFRd.sys</Data>
             <Data Name="ServiceType">kernel mode driver</Data>
             <Data Name="StartType">demand start</Data>
@@ -429,7 +683,7 @@ mod tests {
           <System>
             <Provider Name="Service Control Manager" Guid="{555908d1-a6d7-4695-8e1e-26931d2012f4}" EventSourceName="Service Control Manager">
             </Provider>
-            <EventID Qualifiers="49152">7030</EventID>
+            <EventID>7030</EventID>
             <Version>0</Version>
             <Level>2</Level>
             <Task>0</Task>
@@ -459,7 +713,7 @@ mod tests {
           <System>
             <Provider Name="Service Control Manager" Guid="{555908d1-a6d7-4695-8e1e-26931d2012f4}" EventSourceName="Service Control Manager">
             </Provider>
-            <EventID Qualifiers="49152">7036</EventID>
+            <EventID>7036</EventID>
             <Version>0</Version>
             <Level>2</Level>
             <Task>0</Task>
@@ -478,7 +732,7 @@ mod tests {
             </Security>
           </System>
           <EventData>
-            <Data Name="param1">User-Agent</Data>
+            <Data Name="param1">abcdefghABCDEFGH</Data>
           </EventData>
         </Event>"#.to_string();
     }
@@ -490,7 +744,7 @@ mod tests {
           <System>
             <Provider Name="Service Control Manager" Guid="{555908d1-a6d7-4695-8e1e-26931d2012f4}" EventSourceName="Service Control Manager">
             </Provider>
-            <EventID Qualifiers="16384">7040</EventID>
+            <EventID>7040</EventID>
             <Version>0</Version>
             <Level>4</Level>
             <Task>0</Task>
@@ -516,5 +770,4 @@ mod tests {
           </EventData>
         </Event>"#.to_string();
     }
-
 }
