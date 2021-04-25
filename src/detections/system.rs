@@ -223,48 +223,6 @@ mod tests {
         assert_eq!(Option::None, option_v);
     }
 
-    #[test]
-    fn test_new_service_created() {
-        let xml_str = get_system_service_created_xml();
-        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
-            .map_err(|e| {
-                let stdout = std::io::stdout();
-                let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
-            })
-            .unwrap();
-
-        let mut sys = system::System::new();
-        let option_v = sys.new_service_created(
-            &event.system.event_id.to_string(),
-            &event.parse_event_data(),
-            &event.system.time_created.system_time,
-        );
-        let v = option_v.unwrap();
-        let mut ite = v.iter();
-        assert_eq!(
-            &"Date : 2017-07-12 17:16:29.401630 UTC".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Message : New Service Created".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Command : \\SystemRoot\\System32\\drivers\\WUDFRd.sys".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Results : Service name: ijklmnopIJKLMNOP".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Results : Metasploit-style service name: 16 characters\n".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(Option::None, ite.next());
-    }
-
     // eventidが異なりヒットしないパターン
     #[test]
     fn test_new_service_created_noteq_eventid() {
@@ -285,80 +243,6 @@ mod tests {
             &event.system.time_created.system_time,
         );
         assert_eq!(Option::None, option_v);
-    }
-
-    // cmdlineがセットされていないパターン
-    #[test]
-    fn test_new_service_created_cmdline_notset() {
-        let xml_str = r#"
-        <?xml version="1.0" encoding="utf-8"?>
-        <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
-          <System>
-            <Provider Name="Service Control Manager" Guid="{555908d1-a6d7-4695-8e1e-26931d2012f4}" EventSourceName="Service Control Manager">
-            </Provider>
-            <EventID>7045</EventID>
-            <Version>0</Version>
-            <Level>4</Level>
-            <Task>0</Task>
-            <Opcode>0</Opcode>
-            <Keywords>0x8080000000000000</Keywords>
-            <TimeCreated SystemTime="2017-07-12 17:16:29.401630 UTC">
-            </TimeCreated>
-            <EventRecordID>45</EventRecordID>
-            <Correlation>
-            </Correlation>
-            <Execution ProcessID="620" ThreadID="1796">
-            </Execution>
-            <Channel>System</Channel>
-            <Computer>WIN-P4SIAA0SQCO</Computer>
-            <Security UserID="S-1-5-18">
-            </Security>
-          </System>
-          <EventData>
-            <Data Name="ServiceName">ijklmnopIJKLMNOP</Data>
-            <Data Name="ServiceType">kernel mode driver</Data>
-            <Data Name="StartType">demand start</Data>
-            <Data Name="AccountName"></Data>
-          </EventData>
-        </Event>""#;
-
-        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
-            .map_err(|e| {
-                let stdout = std::io::stdout();
-                let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
-            })
-            .unwrap();
-
-        let mut sys = system::System::new();
-        let option_v = sys.new_service_created(
-            &event.system.event_id.to_string(),
-            &event.parse_event_data(),
-            &event.system.time_created.system_time,
-        );
-        let v = option_v.unwrap();
-        let mut ite = v.iter();
-        assert_eq!(
-            &"Date : 2017-07-12 17:16:29.401630 UTC".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Message : New Service Created".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Command : ".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Results : Service name: ijklmnopIJKLMNOP".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Results : Metasploit-style service name: 16 characters\n".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(Option::None, ite.next());
     }
 
     #[test]
@@ -419,43 +303,6 @@ mod tests {
             &event.system.time_created.system_time,
         );
         assert_eq!(Option::None, option_v);
-    }
-
-    #[test]
-    fn test_suspicious_service_name() {
-        let xml_str = get_suspicious_service_name();
-        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
-            .map_err(|e| {
-                let stdout = std::io::stdout();
-                let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
-            })
-            .unwrap();
-        let mut sys = system::System::new();
-        let option_v = sys.suspicious_service_name(
-            &event.system.event_id.to_string(),
-            &event.parse_event_data(),
-            &event.system.time_created.system_time,
-        );
-        let v = option_v.unwrap();
-        let mut ite = v.iter();
-        assert_eq!(
-            &"Date    : 2017-07-12 07:19:24.066431 UTC".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Message : Suspicious Service Name".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Results : Service name: abcdefghABCDEFGH".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"Results : Metasploit-style service name: 16 characters\n".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(Option::None, ite.next());
     }
 
     // eventidが異なりヒットしないパターン
