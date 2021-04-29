@@ -3,7 +3,7 @@ Type,regex,string
 0,^%SYSTEMROOT%\\[a-zA-Z]{8}\.exe$,Metasploit-style %SYSTEMROOT% image path (possible use of Metasploit 'Native upload' exploit payload)
 0,powershell.*FromBase64String.*IO.Compression.GzipStream,Metasploit-style base64 encoded/compressed PowerShell function (possible use of Metasploit PowerShell exploit payload)
 0,DownloadString\(.http,Download via Net.WebClient DownloadString
-0,mimikatz,Command referencing Mimikatz
+0,MpKsl34afefd5,Command referencing Mimikatz
 0,Invoke-Mimikatz.ps,PowerSploit Invoke-Mimikatz.ps1
 0,PowerSploit.*ps1,Use of PowerSploit
 0,User-Agent,User-Agent set via command line

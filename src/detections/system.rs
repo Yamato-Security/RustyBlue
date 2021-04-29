@@ -19,7 +19,8 @@ impl System {
     ) {
         self.system_log_clear(&event_id, &system.time_created.system_time)
             .and_then(System::print_console);
-        self.windows_event_log(&event_id, &event_data, &system.time_created.system_time);
+        self.windows_event_log(&event_id, &event_data, &system.time_created.system_time)
+            .and_then(System::print_console);
         self.new_service_created(&event_id, &event_data, &system.time_created.system_time)
             .and_then(System::print_console);
         self.interactive_service_warning(&event_id, &event_data, &system.time_created.system_time)
@@ -31,10 +32,12 @@ impl System {
     fn print_console(v: Vec<String>) -> Option<Vec<String>> {
         let stdout = std::io::stdout();
         let mut stdout = stdout.lock();
-        v.iter().for_each(|s| {
-            MessageNotation::info_noheader(&mut stdout, format!("{}", s)).ok();
-        });
-        MessageNotation::info_noheader(&mut stdout, format!("\n")).ok();
+        if !v.is_empty() {
+            v.iter().for_each(|s| {
+                MessageNotation::info_noheader(&mut stdout, format!("{}", s)).ok();
+            });
+            MessageNotation::info_noheader(&mut stdout, format!("")).ok();
+        }
         return Option::Some(v);
     }
 
