@@ -17,6 +17,7 @@ regex = "1"
 csv = "1.1"
 base64 = "*"
 flate2 = "1.0"
+lazy_static = "1.4.0"
 
 [target.x86_64-pc-windows-gnu]
 linker = "x86_64-w64-mingw32-gcc"

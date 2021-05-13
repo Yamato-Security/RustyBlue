@@ -1,8 +1,8 @@
 extern crate regex;
 
+use crate::detections::configs;
 use crate::detections::print::MessageNotation;
 use crate::models::event;
-use regex::Regex;
 use std::collections::HashMap;
 
 pub struct AppLocker {}
@@ -27,10 +27,9 @@ impl AppLocker {
             return;
         }
 
-        let re = Regex::new(r" was .*$").unwrap();
         let default = "".to_string();
         let message = &system.message.as_ref().unwrap_or(&default);
-        let command = re.replace_all(&message, "");
+        let command = configs::CONFIG.applocker_regex.replace_all(&message, "");
 
         let stdout = std::io::stdout();
         let mut stdout = stdout.lock();
@@ -44,10 +43,9 @@ impl AppLocker {
             return;
         }
 
-        let re = Regex::new(r" was .*$").unwrap();
         let default = "".to_string();
         let message = &system.message.as_ref().unwrap_or(&default);
-        let command = re.replace_all(&message, "");
+        let command = configs::CONFIG.applocker_regex.replace_all(&message, "");
 
         let stdout = std::io::stdout();
         let mut stdout = stdout.lock();

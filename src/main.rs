@@ -7,9 +7,9 @@ use rusty_blue::detections::print::MessageNotation;
 use std::{fs, path::PathBuf, process};
 
 fn main() {
-    if let Some(filepath) = configs::singleton().args.value_of("filepath") {
+    if let Some(filepath) = configs::CONFIG.args.value_of("filepath") {
         parse_file(&filepath.to_string());
-    } else if let Some(dirpath) = configs::singleton().args.value_of("dirpath") {
+    } else if let Some(dirpath) = configs::CONFIG.args.value_of("dirpath") {
         let target_paths = parse_dir(&dirpath.to_string());
         for target_path in target_paths {
             println!("---------------------");
@@ -19,7 +19,7 @@ fn main() {
         }
     }
 
-    if configs::singleton().args.is_present("credits") {
+    if configs::CONFIG.args.is_present("credits") {
         print_credits();
     }
 }
