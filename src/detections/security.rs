@@ -367,7 +367,7 @@ impl Security {
         let servicename = event_data.get("ObjectName").unwrap_or(&self.empty_str);
         msges.push(format!("Target service: {}", servicename));
 
-        msges.push("WRITE_DAC".to_string());
+        msges.push("Desired Access: WRITE_DAC".to_string());
 
         return Option::Some(msges);
     }

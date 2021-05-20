@@ -133,7 +133,8 @@ fn check_obfu(string: &str) -> std::string::String {
             obfutext.push_str("% alphanumeric and common symbols\n");
         }
 
-        percent = ((nobinarystring.len().wrapping_sub(length as usize) as f64) / length) / length;
+        let nobinary_len = nobinarystring.len().wrapping_sub(length as usize) as f64;
+        percent = ( length - nobinary_len ) / length;
         let binarypercent = 1.0 - percent;
         if binarypercent > maxbinary {
             obfutext.push_str("Possible command obfuscation: ");
