@@ -121,11 +121,12 @@ fn check_obfu(string: &str) -> std::string::String {
         .replace_all(&lowercasestring, "");
 
     if length > 0.0 {
-        let mut percent = (length - noalphastring.len() as f64) / length;
+        let percent = (length - noalphastring.len() as f64) / length;
         if ((length / 100.0) as f64) < minpercent {
             minpercent = length / 100.0;
         }
 
+        // ascii以外の文字列の割合がminpercentを超えている場合に検知する。
         if percent < minpercent {
             obfutext.push_str("Possible command obfuscation: only ");
             let percent = (percent * 100.0) as usize;
@@ -133,9 +134,8 @@ fn check_obfu(string: &str) -> std::string::String {
             obfutext.push_str("% alphanumeric and common symbols\n");
         }
 
-        let nobinary_len = nobinarystring.len().wrapping_sub(length as usize) as f64;
-        percent = ( length - nobinary_len ) / length;
-        let binarypercent = 1.0 - percent;
+        // バイナリ形式[0|1]のコマンドラインがmaxbinaryの割合を超えている場合、検知する
+        let binarypercent = ( length - (nobinarystring.len() as f64) ) / length;
         if binarypercent > maxbinary {
             obfutext.push_str("Possible command obfuscation: ");
             let binarypercent = (binarypercent * 100.0) as usize;
