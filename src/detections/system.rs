@@ -64,7 +64,7 @@ impl System {
             msges.push(format!("Results : {}", text));
         }
         if !commandline.is_empty() {
-            utils::check_command(7045, &commandline, 1000, 0, &servicename, &"", &system_time);
+            utils::check_command(7045, &commandline, 1000, 1, &servicename, &"", &system_time);
         }
         return Option::Some(msges);
     }
