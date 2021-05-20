@@ -135,7 +135,7 @@ fn check_obfu(string: &str) -> std::string::String {
         }
 
         // バイナリ形式[0|1]のコマンドラインがmaxbinaryの割合を超えている場合、検知する
-        let binarypercent = ( length - (nobinarystring.len() as f64) ) / length;
+        let binarypercent = (length - (nobinarystring.len() as f64)) / length;
         if binarypercent > maxbinary {
             obfutext.push_str("Possible command obfuscation: ");
             let binarypercent = (binarypercent * 100.0) as usize;
@@ -219,8 +219,8 @@ mod tests {
 
     #[test]
     fn test_check_obfu() {
-        let obfutext = utils::check_obfu("string");
-        assert!(obfutext == "Possible command obfuscation: 100% zeroes and ones (possible numeric or binary encoding)\n");
+        let obfutext = utils::check_obfu("s01010101s");
+        assert!(obfutext == "Possible command obfuscation: 80% zeroes and ones (possible numeric or binary encoding)\n");
     }
 
     #[test]

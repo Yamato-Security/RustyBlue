@@ -42,72 +42,70 @@ impl Detection {
 
         for record in parser.records() {
             match record {
-                Ok(r) => {
-                    match quick_xml::de::from_str(&r.data) {
-                        Ok(event) => {
-                            let event: event::Evtx = event;
-                            let event_id = event.system.event_id.to_string();
-                            let channel = event.system.channel.to_string();
-                            let event_data = event.parse_event_data();
+                Ok(r) => match quick_xml::de::from_str(&r.data) {
+                    Ok(event) => {
+                        let event: event::Evtx = event;
+                        let event_id = event.system.event_id.to_string();
+                        let channel = event.system.channel.to_string();
+                        let event_data = event.parse_event_data();
 
-                            &common.detection(&event.system, &event_data);
-                            if channel == "Security" {
-                                match event_id.as_str() {
-                                    "4688" | "4672" | "4720" | "4728" | "4732" | "4756"
-                                    | "4625" | "4673" | "4674" | "4648" | "1102" => {
-                                        &security.detection(
-                                            event_id,
-                                            &event.system,
-                                            &event.user_data,
-                                            event_data,
-                                        );
-                                    }
-                                    _ => (),
+                        &common.detection(&event.system, &event_data);
+                        if channel == "Security" {
+                            match event_id.as_str() {
+                                "4688" | "4672" | "4720" | "4728" | "4732" | "4756" | "4625"
+                                | "4673" | "4674" | "4648" | "1102" => {
+                                    &security.detection(
+                                        event_id,
+                                        &event.system,
+                                        &event.user_data,
+                                        event_data,
+                                    );
                                 }
-                            } else if channel == "System" {
-                                match event_id.as_str() {
-                                    "7030" | "7036" | "7045" | "7040" | "104" => {
-                                        &system.detection(event_id, &event.system, event_data);
-                                    }
-                                    _ => (),
+                                _ => (),
+                            }
+                        } else if channel == "System" {
+                            match event_id.as_str() {
+                                "7030" | "7036" | "7045" | "7040" | "104" => {
+                                    &system.detection(event_id, &event.system, event_data);
                                 }
-                            } else if channel == "Application" {
-                                match event_id.as_str() {
-                                    "2" => {
-                                        &application.detection(event_id, &event.system, event_data);
-                                    }
-                                    _ => (),
+                                _ => (),
+                            }
+                        } else if channel == "Application" {
+                            match event_id.as_str() {
+                                "2" => {
+                                    &application.detection(event_id, &event.system, event_data);
                                 }
-                            } else if channel == "Microsoft-Windows-PowerShell/Operational" {
-                                match event_id.as_str() {
-                                    "4103" | "4104" => {
-                                        &powershell.detection(event_id, &event.system, event_data);
-                                    }
-                                    _ => (),
+                                _ => (),
+                            }
+                        } else if channel == "Microsoft-Windows-PowerShell/Operational" {
+                            match event_id.as_str() {
+                                "4103" | "4104" => {
+                                    &powershell.detection(event_id, &event.system, event_data);
                                 }
-                            } else if channel == "Microsoft-Windows-Sysmon/Operational" {
-                                match event_id.as_str() {
-                                    "1" | "7" => {
-                                        &sysmon.detection(event_id, &event.system, event_data);
-                                    }
-                                    _ => (),
+                                _ => (),
+                            }
+                        } else if channel == "Microsoft-Windows-Sysmon/Operational" {
+                            match event_id.as_str() {
+                                "1" | "7" => {
+                                    &sysmon.detection(event_id, &event.system, event_data);
                                 }
-                            } else if channel == "Microsoft-Windows-AppLocker/EXE and DLL" {
-                                match event_id.as_str() {
-                                    "8003" | "8004" | "8006" | "8007" => {
-                                        &applocker.detection(event_id, &event.system, event_data);
-                                    }
-                                    _ => (),
+                                _ => (),
+                            }
+                        } else if channel == "Microsoft-Windows-AppLocker/EXE and DLL" {
+                            match event_id.as_str() {
+                                "8003" | "8004" | "8006" | "8007" => {
+                                    &applocker.detection(event_id, &event.system, event_data);
                                 }
+                                _ => (),
                             }
                         }
-                        Err(err) => {
-                            let stdout = std::io::stdout();
-                            let mut stdout = stdout.lock();
-                            MessageNotation::alert(&mut stdout, format!("{}", err)).ok();
-                        }
                     }
-                }
+                    Err(err) => {
+                        let stdout = std::io::stdout();
+                        let mut stdout = stdout.lock();
+                        MessageNotation::alert(&mut stdout, format!("{}", err)).ok();
+                    }
+                },
                 Err(e) => {
                     let stdout = std::io::stdout();
                     let mut stdout = stdout.lock();
