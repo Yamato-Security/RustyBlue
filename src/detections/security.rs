@@ -52,10 +52,10 @@ impl Security {
         }
 
         let mut msges: Vec<String> = Vec::new();
-        msges.push(format!("total_admin_logons:{}", self.total_admin_logons));
-        msges.push(format!("admin_logons:{:?}", self.admin_logons));
+        msges.push(format!("total_admin_logons: {}", self.total_admin_logons));
+        msges.push(format!("admin_logons: {:?}", self.admin_logons));
         msges.push(format!(
-            "multiple_admin_logons:{:?}",
+            "multiple_admin_logons: {:?}",
             self.multiple_admin_logons
         ));
 
@@ -172,24 +172,25 @@ impl Security {
                         format!("Logon with SeDebugPrivilege (admin access)"),
                     )
                     .ok();
+                    MessageNotation::info_noheader(&mut stdout, format!("EventID: {}", 4672)).ok();
                     MessageNotation::info_noheader(
                         &mut stdout,
-                        format!("Username:{}", event_data["SubjectUserName"]),
+                        format!("Username: {}", event_data["SubjectUserName"]),
                     )
                     .ok();
                     MessageNotation::info_noheader(
                         &mut stdout,
-                        format!("Domain:{}", event_data["SubjectDomainName"]),
+                        format!("Domain: {}", event_data["SubjectDomainName"]),
                     )
                     .ok();
                     MessageNotation::info_noheader(
                         &mut stdout,
-                        format!("User SID:{}", event_data["SubjectUserSid"]),
+                        format!("User SID: {}", event_data["SubjectUserSid"]),
                     )
                     .ok();
                     MessageNotation::info_noheader(
                         &mut stdout,
-                        format!("Domain:{}", event_data["PrivilegeList"]),
+                        format!("Domain: {}", event_data["PrivilegeList"]),
                     )
                     .ok();
                 }
@@ -241,6 +242,7 @@ impl Security {
         let mut msges: Vec<String> = Vec::new();
         msges.push(format!("Date: {}", system_time));
         msges.push("New User Created".to_string());
+        msges.push("EventID: 4720".to_string());
 
         let username = event_data.get("TargetUserName").unwrap_or(&self.empty_str);
         msges.push(format!("Username: {}", username));
@@ -268,10 +270,13 @@ impl Security {
         // A member was added to a security-enabled (global|local|universal) group.
         if event_id == "4728" {
             msges.push("User added to global Administrators group".to_string());
+            msges.push("EventID: 4728".to_string());
         } else if event_id == "4732" {
             msges.push("User added to local Administrators group".to_string());
+            msges.push("EventID: 4732".to_string());
         } else if event_id == "4756" {
             msges.push("User added to universal Administrators group".to_string());
+            msges.push("EventID: 4756".to_string());
         } else {
             return Option::None;
         }
@@ -325,6 +330,7 @@ impl Security {
                 .to_string(),
         );
 
+        msges.push("EventID: 4673".to_string());
         let username = event_data.get("SubjectUserName").unwrap_or(&self.empty_str);
         msges.push(format!("Username: {}", username));
 
@@ -360,6 +366,7 @@ impl Security {
         msges.push(format!("Date: {}", system_time));
         msges.push("Possible Hidden Service Attempt".to_string());
         msges.push("User requested to modify the Dynamic Access Control (DAC) permissions of a sevice, possibly to hide it from view".to_string());
+        msges.push("EventID: 4674".to_string());
 
         let username = event_data.get("SubjectUserName").unwrap_or(&self.empty_str);
         msges.push(format!("User: {}", username));
@@ -421,6 +428,7 @@ impl Security {
                 .to_string(),
         );
         msges.push("an indicator of a password spray attack".to_string());
+        msges.push("EventID: 4648".to_string());
 
         msges.push(format!("Target Usernames: {}", usernames.trim()));
         let access_username = event_data.get("SubjectUserName").unwrap_or(&self.empty_str);
@@ -452,6 +460,8 @@ impl Security {
         msges.push(format!("Date: {}", system_time));
         msges.push("Audit Log Clear".to_string());
         msges.push("The Audit log was cleared".to_string());
+        msges.push("EventID: 1102".to_string());
+
         let username = user_data
             .as_ref()
             .and_then(|u| u.log_file_cleared.as_ref())
@@ -500,6 +510,10 @@ mod tests {
         );
         assert_eq!(
             &"New User Created".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"EventID: 4720".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -583,6 +597,10 @@ mod tests {
         );
         assert_eq!(
             &"New User Created".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"EventID: 4720".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -677,6 +695,10 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
+            &"EventID: 4732".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
             &"Username: testnamess".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
@@ -718,6 +740,10 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
+            &"EventID: 4728".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
             &"Username: testnamess".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
@@ -756,6 +782,10 @@ mod tests {
         );
         assert_eq!(
             &"User added to universal Administrators group".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"EventID: 4756".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -864,6 +894,10 @@ mod tests {
         );
         assert_eq!(
             &"User added to local Administrators group".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"EventID: 4732".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -1109,6 +1143,10 @@ mod tests {
                     ite.next().unwrap_or(&"".to_string())
                 );
                 assert_eq!(
+                    &"EventID: 4673".to_string(),
+                    ite.next().unwrap_or(&"".to_string())
+                );
+                assert_eq!(
                     &"Username: WinHoge".to_string(),
                     ite.next().unwrap_or(&"".to_string())
                 );
@@ -1201,6 +1239,10 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(&"User requested to modify the Dynamic Access Control (DAC) permissions of a sevice, possibly to hide it from view".to_string(), ite.next().unwrap_or(&"".to_string()));
+        assert_eq!(
+            &"EventID: 4674".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
         assert_eq!(
             &"User: WinHoge".to_string(),
             ite.next().unwrap_or(&"".to_string())
@@ -1351,6 +1393,7 @@ mod tests {
                     assert_eq!(&"Distributed Account Explicit Credential Use (Password Spray Attack)".to_string(),ret_ite.next().unwrap());
                     assert_eq!(&"The use of multiple user account access attempts with explicit credentials is ".to_string(),ret_ite.next().unwrap());
                     assert_eq!(&"an indicator of a password spray attack".to_string(),ret_ite.next().unwrap());
+                    assert_eq!(&"EventID: 4648".to_string(),ret_ite.next().unwrap());
                     assert_eq!("Target Usernames: smisenar1 smisenar2 smisenar3 smisenar4 smisenar5 smisenar6 smisenar7",ret_ite.next().unwrap());
                     assert_eq!(&"Accessing Username: jwrig".to_string(),ret_ite.next().unwrap());
                     assert_eq!(&"Accessing Host Name: DESKTOP-JR78RLP".to_string(),ret_ite.next().unwrap());
@@ -1426,6 +1469,10 @@ mod tests {
         );
         assert_eq!(
             &"The Audit log was cleared".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"EventID: 1102".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
