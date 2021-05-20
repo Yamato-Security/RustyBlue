@@ -421,7 +421,8 @@ impl Security {
 
         let mut msges: Vec<String> = Vec::new();
         msges.push(
-            "Message: Distributed Account Explicit Credential Use (Password Spray Attack)".to_string(),
+            "Message: Distributed Account Explicit Credential Use (Password Spray Attack)"
+                .to_string(),
         );
         msges.push(
             "The use of multiple user account access attempts with explicit credentials is "
@@ -995,7 +996,8 @@ mod tests {
                 let v = sec.disp_login_failed().unwrap();
                 let mut ite = v.iter();
                 assert_eq!(
-                    &"Message: High number of total logon failures for multiple accounts".to_string(),
+                    &"Message: High number of total logon failures for multiple accounts"
+                        .to_string(),
                     ite.next().unwrap_or(&"".to_string())
                 );
                 assert_eq!(

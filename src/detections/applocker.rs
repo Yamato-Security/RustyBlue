@@ -33,7 +33,8 @@ impl AppLocker {
 
         let stdout = std::io::stdout();
         let mut stdout = stdout.lock();
-        MessageNotation::info_noheader(&mut stdout, format!("Message: Message Applocker Warning")).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("Message: Message Applocker Warning"))
+            .ok();
         MessageNotation::info_noheader(&mut stdout, "EventID: 8003".to_string()).ok();
         MessageNotation::info_noheader(&mut stdout, format!("Command: {}", command)).ok();
         MessageNotation::info_noheader(&mut stdout, format!("Results: {}", message)).ok();
@@ -51,7 +52,8 @@ impl AppLocker {
         let stdout = std::io::stdout();
         let mut stdout = stdout.lock();
 
-        MessageNotation::info_noheader(&mut stdout, format!("Message: Message Applocker Block")).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("Message: Message Applocker Block"))
+            .ok();
         MessageNotation::info_noheader(&mut stdout, "EventID: 8004".to_string()).ok();
         MessageNotation::info_noheader(&mut stdout, format!("Command: {}", command)).ok();
         MessageNotation::info_noheader(&mut stdout, format!("Results: {}", message)).ok();
