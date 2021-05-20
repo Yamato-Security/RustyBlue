@@ -58,18 +58,19 @@ impl Sysmon {
                 let _command_line = event_data.get("ImageLoaded").unwrap_or(&default);
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::info_noheader(&mut stdout, format!("Date : {}", system_time)).ok();
+                MessageNotation::info_noheader(&mut stdout, format!("Date: {}", system_time)).ok();
+                MessageNotation::info_noheader(&mut stdout, "EventID: 7".to_string()).ok();
                 MessageNotation::info_noheader(
                     &mut stdout,
-                    format!("Message : Unsigned Image (DLL)"),
+                    format!("Message: Unsigned Image (DLL)"),
                 )
                 .ok();
                 MessageNotation::info_noheader(
                     &mut stdout,
-                    format!("Result  : Loaded by: {}", _image),
+                    format!("Result: Loaded by: {}", _image),
                 )
                 .ok();
-                MessageNotation::info_noheader(&mut stdout, format!("Command : {}", _command_line))
+                MessageNotation::info_noheader(&mut stdout, format!("Command: {}", _command_line))
                     .ok();
             }
         };

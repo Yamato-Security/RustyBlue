@@ -61,7 +61,7 @@ pub fn check_command(
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
                 d.read_to_string(&mut uncompressed).unwrap();
-                MessageNotation::info_noheader(&mut stdout, format!("Decoded : {}", uncompressed))
+                MessageNotation::info_noheader(&mut stdout, format!("Decoded: {}", uncompressed))
                     .ok();
                 text.push_str("Base64-encoded and compressed function\n");
             } else {
@@ -69,7 +69,7 @@ pub fn check_command(
                 let mut stdout = stdout.lock();
                 MessageNotation::info_noheader(
                     &mut stdout,
-                    format!("Decoded : {}", str::from_utf8(decoded.as_slice()).unwrap()),
+                    format!("Decoded: {}", str::from_utf8(decoded.as_slice()).unwrap()),
                 )
                 .ok();
                 text.push_str("Base64-encoded function\n");
@@ -81,28 +81,28 @@ pub fn check_command(
     if !text.is_empty() {
         let stdout = std::io::stdout();
         let mut stdout = stdout.lock();
-        MessageNotation::info_noheader(&mut stdout, format!("Date : {}", system_time)).ok();
-        MessageNotation::info_noheader(&mut stdout, format!("EventID : {}", event_id)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("Date: {}", system_time)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("EventID: {}", event_id)).ok();
         if servicecmd != 0 {
             MessageNotation::info_noheader(
                 &mut stdout,
-                format!("Message : Suspicious Service Command"),
+                format!("Message: Suspicious Service Command"),
             )
             .ok();
             MessageNotation::info_noheader(
                 &mut stdout,
-                format!("Results : Service name: {}\n", servicename),
+                format!("Results: Service name: {}\n", servicename),
             )
             .ok();
         } else {
             MessageNotation::info_noheader(
                 &mut stdout,
-                format!("Message : Suspicious Command Line"),
+                format!("Message: Suspicious Command Line"),
             )
             .ok();
         }
-        MessageNotation::info_noheader(&mut stdout, format!("command : {}", commandline)).ok();
-        MessageNotation::info_noheader(&mut stdout, format!("result : {}", text)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("command: {}", commandline)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("result: {}", text)).ok();
     }
 }
 
@@ -121,11 +121,12 @@ fn check_obfu(string: &str) -> std::string::String {
         .replace_all(&lowercasestring, "");
 
     if length > 0.0 {
-        let mut percent = (length - noalphastring.len() as f64) / length;
+        let percent = (length - noalphastring.len() as f64) / length;
         if ((length / 100.0) as f64) < minpercent {
             minpercent = length / 100.0;
         }
 
+        // ascii以外の文字列の割合がminpercentを超えている場合に検知する。
         if percent < minpercent {
             obfutext.push_str("Possible command obfuscation: only ");
             let percent = (percent * 100.0) as usize;
@@ -133,8 +134,8 @@ fn check_obfu(string: &str) -> std::string::String {
             obfutext.push_str("% alphanumeric and common symbols\n");
         }
 
-        percent = ((nobinarystring.len().wrapping_sub(length as usize) as f64) / length) / length;
-        let binarypercent = 1.0 - percent;
+        // バイナリ形式[0|1]のコマンドラインがmaxbinaryの割合を超えている場合、検知する
+        let binarypercent = (length - (nobinarystring.len() as f64)) / length;
         if binarypercent > maxbinary {
             obfutext.push_str("Possible command obfuscation: ");
             let binarypercent = (binarypercent * 100.0) as usize;
@@ -218,8 +219,8 @@ mod tests {
 
     #[test]
     fn test_check_obfu() {
-        let obfutext = utils::check_obfu("string");
-        assert!(obfutext == "Possible command obfuscation: 100% zeroes and ones (possible numeric or binary encoding)\n");
+        let obfutext = utils::check_obfu("s01010101s");
+        assert!(obfutext == "Possible command obfuscation: 80% zeroes and ones (possible numeric or binary encoding)\n");
     }
 
     #[test]

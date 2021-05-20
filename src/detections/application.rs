@@ -52,11 +52,16 @@ impl Application {
                         format!("Date    : {}", system.time_created.system_time),
                     )
                     .ok();
-                    MessageNotation::info_noheader(&mut stdout, format!("Message EMET Block")).ok();
-                    MessageNotation::info_noheader(&mut stdout, format!("Command : {}", command))
+                    MessageNotation::info_noheader(
+                        &mut stdout,
+                        format!("Message: Message EMET Block"),
+                    )
+                    .ok();
+                    MessageNotation::info_noheader(&mut stdout, "EventID: 2".to_string()).ok();
+                    MessageNotation::info_noheader(&mut stdout, format!("Command: {}", command))
                         .ok();
-                    MessageNotation::info_noheader(&mut stdout, format!("Results : {}", text)).ok();
-                    MessageNotation::info_noheader(&mut stdout, format!("Results : {}", username))
+                    MessageNotation::info_noheader(&mut stdout, format!("Results: {}", text)).ok();
+                    MessageNotation::info_noheader(&mut stdout, format!("Results: {}", username))
                         .ok();
                 }
             }
