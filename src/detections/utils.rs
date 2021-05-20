@@ -61,7 +61,7 @@ pub fn check_command(
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
                 d.read_to_string(&mut uncompressed).unwrap();
-                MessageNotation::info_noheader(&mut stdout, format!("Decoded : {}", uncompressed))
+                MessageNotation::info_noheader(&mut stdout, format!("Decoded: {}", uncompressed))
                     .ok();
                 text.push_str("Base64-encoded and compressed function\n");
             } else {
@@ -69,7 +69,7 @@ pub fn check_command(
                 let mut stdout = stdout.lock();
                 MessageNotation::info_noheader(
                     &mut stdout,
-                    format!("Decoded : {}", str::from_utf8(decoded.as_slice()).unwrap()),
+                    format!("Decoded: {}", str::from_utf8(decoded.as_slice()).unwrap()),
                 )
                 .ok();
                 text.push_str("Base64-encoded function\n");
@@ -81,28 +81,28 @@ pub fn check_command(
     if !text.is_empty() {
         let stdout = std::io::stdout();
         let mut stdout = stdout.lock();
-        MessageNotation::info_noheader(&mut stdout, format!("Date : {}", system_time)).ok();
-        MessageNotation::info_noheader(&mut stdout, format!("EventID : {}", event_id)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("Date: {}", system_time)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("EventID: {}", event_id)).ok();
         if servicecmd != 0 {
             MessageNotation::info_noheader(
                 &mut stdout,
-                format!("Message : Suspicious Service Command"),
+                format!("Message: Suspicious Service Command"),
             )
             .ok();
             MessageNotation::info_noheader(
                 &mut stdout,
-                format!("Results : Service name: {}\n", servicename),
+                format!("Results: Service name: {}\n", servicename),
             )
             .ok();
         } else {
             MessageNotation::info_noheader(
                 &mut stdout,
-                format!("Message : Suspicious Command Line"),
+                format!("Message: Suspicious Command Line"),
             )
             .ok();
         }
-        MessageNotation::info_noheader(&mut stdout, format!("command : {}", commandline)).ok();
-        MessageNotation::info_noheader(&mut stdout, format!("result : {}", text)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("command: {}", commandline)).ok();
+        MessageNotation::info_noheader(&mut stdout, format!("result: {}", text)).ok();
     }
 }
 

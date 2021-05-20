@@ -57,11 +57,12 @@ impl System {
         let text = utils::check_regex(&servicename, 1);
         let mut msges: Vec<String> = Vec::new();
         if !text.is_empty() {
-            msges.push(format!("Date : {}", system_time));
-            msges.push("Message : New Service Created".to_string());
-            msges.push(format!("Command : {}", commandline));
-            msges.push(format!("Results : Service name: {}", servicename));
-            msges.push(format!("Results : {}", text));
+            msges.push(format!("Date: {}", system_time));
+            msges.push("Message: New Service Created".to_string());
+            msges.push("EventID: 7045".to_string());
+            msges.push(format!("Command: {}", commandline));
+            msges.push(format!("Results: Service name: {}", servicename));
+            msges.push(format!("Results: {}", text));
         }
         if !commandline.is_empty() {
             utils::check_command(7045, &commandline, 1000, 1, &servicename, &"", &system_time);
@@ -82,11 +83,12 @@ impl System {
         let default = String::from("");
         let servicename = &event_data.get("param1").unwrap_or(&default);
         let mut msges: Vec<String> = Vec::new();
-        msges.push(format!("Date    : {}", system_time));
-        msges.push("Message : Interactive service warning".to_string());
-        msges.push(format!("Results : Service name: {}", servicename));
+        msges.push(format!("Date: {}", system_time));
+        msges.push("Message: Interactive service warning".to_string());
+        msges.push("EventID: 7030".to_string());
+        msges.push(format!("Results: Service name: {}", servicename));
         msges.push(
-            "Results : Malware (and some third party software) trigger this warning".to_string(),
+            "Results: Malware (and some third party software) trigger this warning".to_string(),
         );
         msges.push(format!("{}", utils::check_regex(&servicename, 1)));
         return Option::Some(msges);
@@ -107,10 +109,11 @@ impl System {
         let text = utils::check_regex(&servicename, 1);
         let mut msges: Vec<String> = Vec::new();
         if !text.is_empty() {
-            msges.push(format!("Date    : {}", system_time));
-            msges.push("Message : Suspicious Service Name".to_string());
-            msges.push(format!("Results : Service name: {}", servicename));
-            msges.push(format!("Results : {}", text));
+            msges.push(format!("Date: {}", system_time));
+            msges.push("Message: Suspicious Service Name".to_string());
+            msges.push("EventID: 7036".to_string());
+            msges.push(format!("Results: Service name: {}", servicename));
+            msges.push(format!("Results: {}", text));
         }
         return Option::Some(msges);
     }
@@ -121,9 +124,10 @@ impl System {
         }
         let mut msges: Vec<String> = Vec::new();
 
-        msges.push(format!("Date : {}", system_time));
-        msges.push("Message : System Log Clear".to_string());
-        msges.push("Results : The System log was cleared.".to_string());
+        msges.push(format!("Date: {}", system_time));
+        msges.push("Message: System Log Clear".to_string());
+        msges.push("EventID: 104".to_string());
+        msges.push("Results: The System log was cleared.".to_string());
         return Option::Some(msges);
     }
 
@@ -139,19 +143,20 @@ impl System {
         let mut msges: Vec<String> = Vec::new();
         if let Some(_param1) = event_data.get("param1") {
             if _param1 == "Windows Event Log" {
-                msges.push(format!("Date    : {}", system_time));
-                msges.push(format!("Service name : {}", _param1));
+                msges.push(format!("Date: {}", system_time));
+                msges.push("EventID: 7040".to_string());
+                msges.push(format!("Service name: {}", _param1));
                 if let Some(_param2) = event_data.get("param2") {
                     if _param2 == "disabled" {
-                        msges.push("Message : Event Log Service Stopped".to_string());
+                        msges.push("Message: Event Log Service Stopped".to_string());
                         msges.push(
-                            "Results : Selective event log manipulation may follow this event."
+                            "Results: Selective event log manipulation may follow this event."
                                 .to_string(),
                         );
                     } else if _param2 == "auto start" {
-                        msges.push("Message : Event Log Service Started".to_string());
+                        msges.push("Message: Event Log Service Started".to_string());
                         msges.push(
-                            "Results : Selective event log manipulation may precede this event."
+                            "Results: Selective event log manipulation may precede this event."
                                 .to_string(),
                         );
                     }
@@ -191,15 +196,19 @@ mod tests {
         let v = option_v.unwrap();
         let mut ite = v.iter();
         assert_eq!(
-            &"Date : 2019-04-27 21:04:25.733401 UTC".to_string(),
+            &"Date: 2019-04-27 21:04:25.733401 UTC".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Message : System Log Clear".to_string(),
+            &"Message: System Log Clear".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Results : The System log was cleared.".to_string(),
+            &"EventID: 104".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Results: The System log was cleared.".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(Option::None, ite.next());
@@ -267,19 +276,23 @@ mod tests {
         let v = option_v.unwrap();
         let mut ite = v.iter();
         assert_eq!(
-            &"Date    : 2017-07-12 07:19:24.066431 UTC".to_string(),
+            &"Date: 2017-07-12 07:19:24.066431 UTC".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Message : Interactive service warning".to_string(),
+            &"Message: Interactive service warning".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Results : Service name: Printer Extensions and Notifications".to_string(),
+            &"EventID: 7030".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Results : Malware (and some third party software) trigger this warning".to_string(),
+            &"Results: Service name: Printer Extensions and Notifications".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Results: Malware (and some third party software) trigger this warning".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(&"".to_string(), ite.next().unwrap_or(&"".to_string()));
@@ -349,19 +362,23 @@ mod tests {
         let v = option_v.unwrap();
         let mut ite = v.iter();
         assert_eq!(
-            &"Date    : 2017-07-12 07:20:03.875567 UTC".to_string(),
+            &"Date: 2017-07-12 07:20:03.875567 UTC".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Service name : Windows Event Log".to_string(),
+            &"EventID: 7040".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Message : Event Log Service Stopped".to_string(),
+            &"Service name: Windows Event Log".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Results : Selective event log manipulation may follow this event.".to_string(),
+            &"Message: Event Log Service Stopped".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Results: Selective event log manipulation may follow this event.".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(Option::None, ite.next());
@@ -416,19 +433,23 @@ mod tests {
         let v = option_v.unwrap();
         let mut ite = v.iter();
         assert_eq!(
-            &"Date    : 2017-07-12 07:20:03.875567 UTC".to_string(),
+            &"Date: 2017-07-12 07:20:03.875567 UTC".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Service name : Windows Event Log".to_string(),
+            &"EventID: 7040".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Message : Event Log Service Started".to_string(),
+            &"Service name: Windows Event Log".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Results : Selective event log manipulation may precede this event.".to_string(),
+            &"Message: Event Log Service Started".to_string(),
+            ite.next().unwrap_or(&"".to_string())
+        );
+        assert_eq!(
+            &"Results: Selective event log manipulation may precede this event.".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(Option::None, ite.next());

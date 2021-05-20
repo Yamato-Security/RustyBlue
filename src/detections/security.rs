@@ -72,7 +72,7 @@ impl Security {
 
         let mut msges: Vec<String> = Vec::new();
         msges.push(format!(
-            "High number of total logon failures for multiple accounts"
+            "Message: High number of total logon failures for multiple accounts"
         ));
         msges.push(format!(
             "Total accounts: {}",
@@ -169,7 +169,7 @@ impl Security {
                         .ok();
                     MessageNotation::info_noheader(
                         &mut stdout,
-                        format!("Logon with SeDebugPrivilege (admin access)"),
+                        format!("Message: Logon with SeDebugPrivilege (admin access)"),
                     )
                     .ok();
                     MessageNotation::info_noheader(&mut stdout, format!("EventID: {}", 4672)).ok();
@@ -241,7 +241,7 @@ impl Security {
 
         let mut msges: Vec<String> = Vec::new();
         msges.push(format!("Date: {}", system_time));
-        msges.push("New User Created".to_string());
+        msges.push("Message: New User Created".to_string());
         msges.push("EventID: 4720".to_string());
 
         let username = event_data.get("TargetUserName").unwrap_or(&self.empty_str);
@@ -269,13 +269,13 @@ impl Security {
 
         // A member was added to a security-enabled (global|local|universal) group.
         if event_id == "4728" {
-            msges.push("User added to global Administrators group".to_string());
+            msges.push("Message: User added to global Administrators group".to_string());
             msges.push("EventID: 4728".to_string());
         } else if event_id == "4732" {
-            msges.push("User added to local Administrators group".to_string());
+            msges.push("Message: User added to local Administrators group".to_string());
             msges.push("EventID: 4732".to_string());
         } else if event_id == "4756" {
-            msges.push("User added to universal Administrators group".to_string());
+            msges.push("Message: User added to universal Administrators group".to_string());
             msges.push("EventID: 4756".to_string());
         } else {
             return Option::None;
@@ -324,7 +324,7 @@ impl Security {
         }
 
         msges.push(format!("Date: {}", system_time));
-        msges.push("Sensititive Privilege Use Exceeds Threshold".to_string());
+        msges.push("Message: Sensititive Privilege Use Exceeds Threshold".to_string());
         msges.push(
             "Potentially indicative of Mimikatz, multiple sensitive privilege calls have been made"
                 .to_string(),
@@ -364,7 +364,7 @@ impl Security {
 
         let mut msges: Vec<String> = Vec::new();
         msges.push(format!("Date: {}", system_time));
-        msges.push("Possible Hidden Service Attempt".to_string());
+        msges.push("Message: Possible Hidden Service Attempt".to_string());
         msges.push("User requested to modify the Dynamic Access Control (DAC) permissions of a sevice, possibly to hide it from view".to_string());
         msges.push("EventID: 4674".to_string());
 
@@ -421,7 +421,7 @@ impl Security {
 
         let mut msges: Vec<String> = Vec::new();
         msges.push(
-            "Distributed Account Explicit Credential Use (Password Spray Attack)".to_string(),
+            "Message: Distributed Account Explicit Credential Use (Password Spray Attack)".to_string(),
         );
         msges.push(
             "The use of multiple user account access attempts with explicit credentials is "
@@ -458,8 +458,7 @@ impl Security {
 
         let mut msges: Vec<String> = Vec::new();
         msges.push(format!("Date: {}", system_time));
-        msges.push("Audit Log Clear".to_string());
-        msges.push("The Audit log was cleared".to_string());
+        msges.push("Message: The Audit log was cleared".to_string());
         msges.push("EventID: 1102".to_string());
 
         let username = user_data
@@ -509,7 +508,7 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"New User Created".to_string(),
+            &"Message: New User Created".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -596,7 +595,7 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"New User Created".to_string(),
+            &"Message: New User Created".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -691,7 +690,7 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"User added to local Administrators group".to_string(),
+            &"Message: User added to local Administrators group".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -736,7 +735,7 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"User added to global Administrators group".to_string(),
+            &"Message: User added to global Administrators group".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -781,7 +780,7 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"User added to universal Administrators group".to_string(),
+            &"Message: User added to universal Administrators group".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -893,7 +892,7 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"User added to local Administrators group".to_string(),
+            &"Message: User added to local Administrators group".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
@@ -996,7 +995,7 @@ mod tests {
                 let v = sec.disp_login_failed().unwrap();
                 let mut ite = v.iter();
                 assert_eq!(
-                    &"High number of total logon failures for multiple accounts".to_string(),
+                    &"Message: High number of total logon failures for multiple accounts".to_string(),
                     ite.next().unwrap_or(&"".to_string())
                 );
                 assert_eq!(
@@ -1135,7 +1134,7 @@ mod tests {
                     ite.next().unwrap_or(&"".to_string())
                 );
                 assert_eq!(
-                    &"Sensititive Privilege Use Exceeds Threshold".to_string(),
+                    &"Message: Sensititive Privilege Use Exceeds Threshold".to_string(),
                     ite.next().unwrap_or(&"".to_string())
                 );
                 assert_eq!(
@@ -1235,7 +1234,7 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Possible Hidden Service Attempt".to_string(),
+            &"Message: Possible Hidden Service Attempt".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(&"User requested to modify the Dynamic Access Control (DAC) permissions of a sevice, possibly to hide it from view".to_string(), ite.next().unwrap_or(&"".to_string()));
@@ -1390,7 +1389,7 @@ mod tests {
                 if i == &7 && k == &7 && is_eq {
                     let v = ret.unwrap();
                     let mut ret_ite = v.iter();
-                    assert_eq!(&"Distributed Account Explicit Credential Use (Password Spray Attack)".to_string(),ret_ite.next().unwrap());
+                    assert_eq!(&"Message: Distributed Account Explicit Credential Use (Password Spray Attack)".to_string(),ret_ite.next().unwrap());
                     assert_eq!(&"The use of multiple user account access attempts with explicit credentials is ".to_string(),ret_ite.next().unwrap());
                     assert_eq!(&"an indicator of a password spray attack".to_string(),ret_ite.next().unwrap());
                     assert_eq!(&"EventID: 4648".to_string(),ret_ite.next().unwrap());
@@ -1464,11 +1463,7 @@ mod tests {
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
-            &"Audit Log Clear".to_string(),
-            ite.next().unwrap_or(&"".to_string())
-        );
-        assert_eq!(
-            &"The Audit log was cleared".to_string(),
+            &"Message: The Audit log was cleared".to_string(),
             ite.next().unwrap_or(&"".to_string())
         );
         assert_eq!(
