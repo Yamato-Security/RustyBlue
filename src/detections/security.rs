@@ -27,7 +27,7 @@ pub struct Security {
 
 impl Security {
     pub fn new() -> Security {
-        Security {
+        let mut sec = Security {
             max_total_sensitive_privuse: 4,
             max_passspray_login: 6,
             max_passspray_uniquser: 6,
@@ -44,12 +44,18 @@ impl Security {
             account_2_failedcnt: HashMap::new(),
             passspray_2_user: HashMap::new(),
             empty_str: String::default(),
-        }
+        };
+        sec.setup_configs();
+
+        return sec;
     }
 
     pub fn disp(&self) {
         self.disp_admin_logons().and_then(Security::print_console);
         self.disp_login_failed().and_then(Security::print_console);
+        self.disp_login_failed_for_oneuser().into_iter().for_each( |msges| { 
+            Security::print_console(msges);
+        });
     }
 
     fn disp_admin_logons(&self) -> Option<Vec<String>> {
@@ -59,6 +65,7 @@ impl Security {
 
         let mut msges: Vec<String> = Vec::new();
         if self.show_total_admin_logons == 1 {
+            msges.push("EventID : 4672".to_string());
             msges.push(format!("Total Admin Logon: {}", self.total_admin_logons));
         }
         msges.push(format!("admin_logons: {:?}", self.admin_logons));
@@ -100,6 +107,23 @@ impl Security {
         ));
 
         return Option::Some(msges);
+    }
+
+    // ユーザー毎にログインの失敗回数の閾値を超えたら、メッセージを出力
+    fn disp_login_failed_for_oneuser(&self) -> Vec<Vec<String>> {
+        return self.account_2_failedcnt.iter().filter_map( | (key, failed_cnt)| {
+            let mut msges = vec![];
+            if failed_cnt <= &self.max_failed_logons {
+                return Option::None;
+            }
+
+            msges.push("EventID : 4625".to_string());
+            msges.push("Message : High number of logon failures for one account".to_string());
+            msges.push(format!("Username: {}",key));
+            msges.push(format!("Total logon failures: {}",failed_cnt));
+
+            return Option::Some(msges);
+        }).collect();
     }
 
     fn setup_configs(&mut self) {
@@ -155,8 +179,6 @@ impl Security {
         user_data: &Option<event::UserData>,
         event_data: HashMap<String, String>,
     ) {
-        self.setup_configs();
-
         self.process_created(&event_id, &event_data, &system.time_created.system_time);
         self.se_debug_privilege(&event_id, &event_data, &system.time_created.system_time);
         self.account_created(&event_id, &event_data, &system.time_created.system_time)
@@ -1044,6 +1066,7 @@ mod tests {
 
         let mut sec = security::Security::new();
         sec.max_total_failed_logons = 5;
+        sec.max_failed_logons = 4;
 
         // メッセージが表示されるには2ユーザー以上失敗している必要がある。まず一人目
         sec.failed_logon(
@@ -1083,6 +1106,34 @@ mod tests {
             // assert_eq!(Option::None, ite.next());
             } else {
                 assert_eq!(Option::None, sec.disp_login_failed());
+            }
+
+            if fail_cnt > (4+1) {
+                let msges = sec.disp_login_failed_for_oneuser();
+                assert_eq!(1, msges.len());
+                let msges = msges.into_iter().next().unwrap();
+                let mut ite = msges.iter();
+
+                assert_eq!(
+                    &"EventID : 4625".to_string(),
+                    ite.next().unwrap_or(&"".to_string())
+                );
+                assert_eq!(
+                    &"Message : High number of logon failures for one account"
+                        .to_string(),
+                    ite.next().unwrap_or(&"".to_string())
+                );
+                assert_eq!(
+                    &"Username: localuser".to_string(),
+                    ite.next().unwrap_or(&"".to_string())
+                );
+                // Administratorの分があるので一つ引く
+                assert_eq!(
+                    &format!("Total logon failures: {}", (fail_cnt-1)),
+                    ite.next().unwrap_or(&"".to_string())
+                );
+            } else {
+                assert_eq!(0, sec.disp_login_failed_for_oneuser().len());
             }
         });
 
