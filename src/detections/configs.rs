@@ -1,5 +1,5 @@
 use crate::detections::print::MessageNotation;
-use clap::{App, AppSettings, Arg, ArgMatches};
+use clap::{App, AppSettings, ArgMatches};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
