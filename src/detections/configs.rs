@@ -70,18 +70,16 @@ fn build_app<'a>() -> ArgMatches<'a> {
         return ArgMatches::default();
     }
 
+    let usagees = "-f --filepath=[FILEPATH] 'analyze event file'
+    -d --dirpath=[DIRECTORYPATH] 'analyze event log files in directory'
+    -c --credits 'print credits infomation'";
     App::new(program)
         .about("RustyBlue")
         .version("1.0.0")
         .author("YamatoSecurity <info@yamatosecurity.com>")
         .setting(AppSettings::VersionlessSubcommands)
-        .arg(Arg::from_usage(
-            "-f --filepath=[FILEPATH] 'analyze event file'",
-        ))
-        .arg(Arg::from_usage(
-            "-d --dirpath=[DIRECTORYPATH] 'analyze event log files in directory'",
-        ))
-        .arg(Arg::from_usage("-c --credits 'print credits infomation'"))
+        .usage(usagees)
+        .args_from_usage(usagees)
         .get_matches()
 }
 
