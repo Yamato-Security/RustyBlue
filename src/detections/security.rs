@@ -1,7 +1,9 @@
+use lazy_static::__Deref;
+
 use crate::detections::print::MessageNotation;
 use crate::detections::utils;
 use crate::models::event;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use super::configs;
 
@@ -18,8 +20,7 @@ pub struct Security {
     total_failed_logons: i32,
     total_failed_account: i32,
     total_sensitive_privuse: i32,
-    admin_logons: HashMap<String, HashMap<String, i32>>,
-    multiple_admin_logons: HashMap<String, i32>,
+    admin_logons: HashMap<String, HashSet<String>>,
     account_2_failedcnt: HashMap<String, i32>,
     passspray_2_user: HashMap<String, i32>,
     empty_str: String,
@@ -40,7 +41,6 @@ impl Security {
             total_failed_account: 0,
             total_sensitive_privuse: 0,
             admin_logons: HashMap::new(),
-            multiple_admin_logons: HashMap::new(),
             account_2_failedcnt: HashMap::new(),
             passspray_2_user: HashMap::new(),
             empty_str: String::default(),
@@ -52,6 +52,9 @@ impl Security {
 
     pub fn disp(&self) {
         self.disp_admin_logons().and_then(Security::print_console);
+        self.disp_multiple_sid_logon().into_iter().for_each( |msges| { 
+            Security::print_console(msges);
+        });
         self.disp_login_failed().and_then(Security::print_console);
         self.disp_login_failed_for_oneuser().into_iter().for_each( |msges| { 
             Security::print_console(msges);
@@ -63,24 +66,34 @@ impl Security {
             return Option::None;
         }
 
+        // オプションが有効になっている場合のみ、表示する。
         let mut msges: Vec<String> = Vec::new();
         if self.show_total_admin_logons == 1 {
             msges.push("EventID : 4672".to_string());
             msges.push(format!("Total Admin Logon: {}", self.total_admin_logons));
         }
-        msges.push(format!("admin_logons: {:?}", self.admin_logons));
-
-        // 表示方法を変更する。
-        // $obj.Message="Multiple admin logons for one account"
-        // $obj.Results= "Username: $username`n"
-        // $obj.Results += "User SID Access Count: " + $securityid.split().Count
-        // $obj.EventId = 4672
-        msges.push(format!(
-            "multiple_admin_logons: {:?}",
-            self.multiple_admin_logons
-        ));
 
         return Option::Some(msges);
+    }
+
+    fn disp_multiple_sid_logon(&self) -> Vec<Vec<String>> {
+        if self.total_admin_logons < 1 {
+            return vec![];
+        }
+
+        return self.admin_logons.iter().filter_map( | (username, sids) | {
+            if sids.len() < 2 {
+                return Option::None;
+            }
+
+            let mut msges = vec![];
+            msges.push("EventID : 4672".to_string());
+            msges.push("Message : Multiple admin logons for one account".to_string());
+            msges.push(format!("Username: {}",username));
+            msges.push(format!("User SID Access Count: {}",sids.len()));
+
+            return Option::Some(msges);
+        }).collect();
     }
 
     fn disp_login_failed(&self) -> Option<Vec<String>> {
@@ -181,8 +194,7 @@ impl Security {
     ) {
         self.process_created(&event_id, &event_data, &system.time_created.system_time);
         self.se_debug_privilege(&event_id, &event_data, &system.time_created.system_time);
-        self.account_created(&event_id, &event_data, &system.time_created.system_time)
-            .and_then(Security::print_console);
+        //self.account_created(&event_id, &event_data, &system.time_created.system_time).and_then(Security::print_console);
         self.add_member_security_group(&event_id, &event_data, &system.time_created.system_time)
             .and_then(Security::print_console);
         self.failed_logon(&event_id, &event_data);
@@ -286,34 +298,14 @@ impl Security {
                 }
 
                 self.total_admin_logons += 1;
+                let subject_username = &event_data["SubjectUserName"];
+                let subject_sid = &event_data["SubjectUserSid"];
 
-                // admin_logons配列にusernameが含まれているか確認
-                match self.admin_logons.get(&event_data["SubjectUserName"]) {
-                    Some(sid) => {
-                        // 含まれていれば、マルチユーザが管理者としてログインしているか確認
-                        // マルチログオンのデータをセット
-                        if event_data["SubjectUserName"] != event_data["SubjectUserSid"] {
-                            // One username with multiple admin logon SIDs
-                            self.multiple_admin_logons
-                                .insert(event_data["SubjectUserName"].to_string(), 1);
-
-                            let mut count_hash: HashMap<String, i32> = HashMap::new();
-                            count_hash.insert(
-                                event_data["SubjectUserSid"].to_string(),
-                                sid[&event_data["SubjectUserSid"]] + 1,
-                            );
-                            self.admin_logons
-                                .insert(event_data["SubjectUserName"].to_string(), count_hash);
-                        }
-                    }
-                    None => {
-                        // admin_logons配列にセットUserNameとSIDとカウンタをセット
-                        let mut count_hash: HashMap<String, i32> = HashMap::new();
-                        count_hash.insert(event_data["SubjectUserSid"].to_string(), 1);
-                        self.admin_logons
-                            .insert(event_data["SubjectUserName"].to_string(), count_hash);
-                    }
+                if !self.admin_logons.contains_key(subject_username) {
+                    self.admin_logons.insert(subject_username.clone(), HashSet::new());
                 }
+                let sid_sets = self.admin_logons.get_mut(subject_username).unwrap();
+                sid_sets.insert(subject_sid.clone());
             }
         }
     }
@@ -1616,6 +1608,132 @@ mod tests {
             &event.system.time_created.system_time,
         );
         assert_eq!(Option::None, msg);
+    }
+
+    #[test]
+    fn test_se_debug_priviledge() {
+        let mut sec = security::Security::new();
+
+        let event: event::Evtx = quick_xml::de::from_str(&get_4672("hogehoge".to_string(),"hogehoge".to_string())).unwrap();
+        let eventid = "4672".to_string();
+        let system_time = "2021-07-11T06:16:25.6374739Z".to_string();
+        let event_data = event.parse_event_data();
+        // 1Userで1SIDでは表示されない
+        sec.se_debug_privilege(&eventid, &event_data, &system_time);
+        assert_eq!(0, sec.disp_multiple_sid_logon().len());
+        // 1Userで1SIDなら何回やっても表示されない
+        sec.se_debug_privilege(&eventid, &event_data, &system_time);
+        sec.se_debug_privilege(&eventid, &event_data, &system_time);
+        sec.se_debug_privilege(&eventid, &event_data, &system_time);
+        sec.se_debug_privilege(&eventid, &event_data, &system_time);
+        assert_eq!(0, sec.disp_multiple_sid_logon().len());
+
+        // SIDを追加
+        let event2: event::Evtx = quick_xml::de::from_str(&get_4672("hogehoge".to_string(),"hogehoge2".to_string())).unwrap();
+        let event_data2 = event2.parse_event_data();
+        sec.se_debug_privilege(&eventid, &event_data2, &system_time);
+        let msges = sec.disp_multiple_sid_logon();
+        assert_eq!(1, msges.len());
+        {
+            let mut ite = msges.iter().next().unwrap().iter();
+            assert_eq!(
+                &"EventID : 4672".to_string(),
+                ite.next().unwrap_or(&"".to_string())
+            );
+            assert_eq!(
+                &"Message : Multiple admin logons for one account".to_string(),
+                ite.next().unwrap_or(&"".to_string())
+            );
+            assert_eq!(
+                &"Username: hogehoge".to_string(),
+                ite.next().unwrap_or(&"".to_string())
+            );
+            assert_eq!(
+                &"User SID Access Count: 2".to_string(),
+                ite.next().unwrap_or(&"".to_string())
+            );
+            assert_eq!(Option::None, ite.next());
+        }
+
+        // SIDを追加
+        let event2: event::Evtx = quick_xml::de::from_str(&get_4672("hogehoge".to_string(),"hogehoge3".to_string())).unwrap();
+        let event_data2 = event2.parse_event_data();
+        sec.se_debug_privilege(&eventid, &event_data2, &system_time);
+        let msges = sec.disp_multiple_sid_logon();
+        assert_eq!(1, msges.len());
+        {
+            let mut ite = msges.iter().next().unwrap().iter();
+            assert_eq!(
+                &"EventID : 4672".to_string(),
+                ite.next().unwrap_or(&"".to_string())
+            );
+            assert_eq!(
+                &"Message : Multiple admin logons for one account".to_string(),
+                ite.next().unwrap_or(&"".to_string())
+            );
+            assert_eq!(
+                &"Username: hogehoge".to_string(),
+                ite.next().unwrap_or(&"".to_string())
+            );
+            assert_eq!(
+                &"User SID Access Count: 3".to_string(),
+                ite.next().unwrap_or(&"".to_string())
+            );
+            assert_eq!(Option::None, ite.next());
+        }
+
+        // Userを追加
+        let event_user2: event::Evtx = quick_xml::de::from_str(&get_4672("ariai".to_string(),"ariari".to_string())).unwrap();
+        let event_user2_data = event_user2.parse_event_data();
+        sec.se_debug_privilege(&eventid, &event_user2_data, &system_time);
+        let msges = sec.disp_multiple_sid_logon();
+        assert_eq!(1, msges.len());
+
+        sec.se_debug_privilege(&eventid, &event_user2_data, &system_time);
+        sec.se_debug_privilege(&eventid, &event_user2_data, &system_time);
+        let msges = sec.disp_multiple_sid_logon();
+        assert_eq!(1, msges.len());
+
+        let event2_user2: event::Evtx = quick_xml::de::from_str(&get_4672("ariai".to_string(),"ariari2".to_string())).unwrap();
+        let event2_user2_data = event2_user2.parse_event_data();
+        sec.se_debug_privilege(&eventid, &event2_user2_data, &system_time);
+        let msges = sec.disp_multiple_sid_logon();
+        assert_eq!(2, msges.len());        
+    }
+    // msges.push("EventID : 4672".to_string());
+    // msges.push("Message : Multiple admin logons for one account".to_string());
+    // msges.push(format!("Username: {}",username));
+    // msges.push(format!("User SID Access Count: {}",sids.len()));
+
+    fn get_4672( username: String, user_sid: String ) -> String {
+        let xml = r#"
+        <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+            <System>
+                <Provider Name="Microsoft-Windows-Security-Auditing" Guid="{54849625-5478-4994-a5ba-3e3b0328c30d}" /> 
+                <EventID>4672</EventID> 
+                <Version>0</Version> 
+                <Level>0</Level> 
+                <Task>12548</Task> 
+                <Opcode>0</Opcode> 
+                <Keywords>0x8020000000000000</Keywords> 
+                <TimeCreated SystemTime="2021-07-11T06:16:25.6374739Z" /> 
+                <EventRecordID>368476</EventRecordID> 
+                <Correlation ActivityID="{0b656df6-74e1-000c-f96d-650be174d701}" /> 
+                <Execution ProcessID="1200" ThreadID="15148" /> 
+                <Channel>Security</Channel> 
+                <Computer>DESKTOP-ICHIICHI</Computer> 
+                <Security /> 
+            </System>
+            <EventData>
+                <Data Name="SubjectUserSid">$SubjectUserSid_Value</Data> 
+                <Data Name="SubjectUserName">$SubjectUserName_Value</Data> 
+                <Data Name="SubjectDomainName">NT AUTHORITY</Data> 
+                <Data Name="SubjectLogonId">0x3e7</Data> 
+                <Data Name="PrivilegeList">SeAssignPrimaryTokenPrivilege SeTcbPrivilege SeSecurityPrivilege SeTakeOwnershipPrivilege SeLoadDriverPrivilege SeBackupPrivilege SeRestorePrivilege SeDebugPrivilege SeAuditPrivilege SeSystemEnvironmentPrivilege SeImpersonatePrivilege SeDelegateSessionUserImpersonatePrivilege</Data> 
+            </EventData>
+        </Event>"#.to_string();
+
+        return xml.replace("$SubjectUserSid_Value", &user_sid).replace("$SubjectUserName_Value", &username);
     }
 
     fn get_audit_log_cleared_xml() -> String {
