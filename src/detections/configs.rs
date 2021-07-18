@@ -1,10 +1,13 @@
 use crate::detections::print::MessageNotation;
+use crate::detections::yaml::ParseYaml;
 use clap::{App, AppSettings, ArgMatches};
 use lazy_static::lazy_static;
 use regex::Regex;
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::PathBuf;
 
 lazy_static! {
     pub static ref CONFIG: ConfigReader = ConfigReader::new();
@@ -28,6 +31,7 @@ pub struct ConfigReader {
     pub nobinary_regex: Regex,
     pub regexes: HashMap<String, Regex>,
     pub compress_regex: Regex,
+    pub configs: yaml_rust::Yaml,
 }
 
 impl ConfigReader {
@@ -52,6 +56,7 @@ impl ConfigReader {
             nobinary_regex: Regex::new(r"[01]").unwrap(),
             regexes: get_regexes(read_csv("regexes.txt")),
             compress_regex: Regex::new(r"Compression.GzipStream.*Decompress").unwrap(),
+            configs: load_config_file(),
         }
     }
 }
@@ -81,6 +86,18 @@ fn build_app<'a>() -> ArgMatches<'a> {
         .usage(usagees)
         .args_from_usage(usagees)
         .get_matches()
+}
+
+// config.ymlを読み込みます
+fn load_config_file() -> yaml_rust::Yaml {
+    // read file
+    let parser = ParseYaml::new();
+    let result = parser.read_file(PathBuf::from("config.yml"));
+    if result.is_err() {
+        panic!("canot read config file(config.yml).");
+    }
+
+    return parser.files.into_iter().next().unwrap();
 }
 
 fn is_test_mode() -> bool {

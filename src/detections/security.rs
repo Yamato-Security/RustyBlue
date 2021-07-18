@@ -3,13 +3,17 @@ use crate::detections::utils;
 use crate::models::event;
 use std::collections::HashMap;
 
+use super::configs;
+
 #[derive(Debug)]
 pub struct Security {
     max_total_sensitive_privuse: i32,
     max_passspray_login: i32,
     max_passspray_uniquser: i32,
+    max_total_failed_logons: i32,
     max_failed_logons: i32,
     alert_all_admin: i32,
+    show_total_admin_logons: i32,
     total_admin_logons: i32,
     total_failed_logons: i32,
     total_failed_account: i32,
@@ -27,8 +31,10 @@ impl Security {
             max_total_sensitive_privuse: 4,
             max_passspray_login: 6,
             max_passspray_uniquser: 6,
-            max_failed_logons: 5,
+            max_total_failed_logons: 5,
+            max_failed_logons:5, 
             alert_all_admin: 0,
+            show_total_admin_logons: 0,
             total_admin_logons: 0,
             total_failed_logons: 0,
             total_failed_account: 0,
@@ -52,8 +58,16 @@ impl Security {
         }
 
         let mut msges: Vec<String> = Vec::new();
-        msges.push(format!("total_admin_logons: {}", self.total_admin_logons));
+        if self.show_total_admin_logons == 1 {
+            msges.push(format!("Total Admin Logon: {}", self.total_admin_logons));
+        }
         msges.push(format!("admin_logons: {:?}", self.admin_logons));
+
+        // 表示方法を変更する。
+        // $obj.Message="Multiple admin logons for one account"
+        // $obj.Results= "Username: $username`n"
+        // $obj.Results += "User SID Access Count: " + $securityid.split().Count
+        // $obj.EventId = 4672
         msges.push(format!(
             "multiple_admin_logons: {:?}",
             self.multiple_admin_logons
@@ -63,10 +77,8 @@ impl Security {
     }
 
     fn disp_login_failed(&self) -> Option<Vec<String>> {
-        let exceed_failed_logons = self.total_failed_logons <= self.max_failed_logons;
-
-        let exist_failed_account = self.account_2_failedcnt.keys().count() as i32 <= 1;
-        if exceed_failed_logons || exist_failed_account {
+        let exceed_failed_logons = self.total_failed_logons <= self.max_total_failed_logons;
+        if exceed_failed_logons {
             return Option::None;
         }
 
@@ -86,6 +98,52 @@ impl Security {
         return Option::Some(msges);
     }
 
+    fn setup_configs(&mut self,) {
+        let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+        {
+            let config_value = configs["alert_all_admin"].as_i64();
+            if config_value.is_some() {
+                self.alert_all_admin = config_value.unwrap() as i32;
+            }
+        }
+        {
+            let config_value = configs["show_total_admin_logons"].as_i64();
+            if config_value.is_some() {
+                self.show_total_admin_logons = config_value.unwrap() as i32;
+            }        
+        }
+        {
+            let config_value = configs["max_total_failed_logons"].as_i64();
+            if config_value.is_some() {
+                self.max_total_failed_logons = config_value.unwrap() as i32;
+            }        
+        }
+        {
+            let config_value = configs["max_failed_logons"].as_i64();
+            if config_value.is_some() {
+                self.max_failed_logons = config_value.unwrap() as i32;
+            }        
+        }
+        {
+            let config_value = configs["max_passspray_login"].as_i64();
+            if config_value.is_some() {
+                self.max_passspray_login = config_value.unwrap() as i32;
+            }        
+        }
+        {
+            let config_value = configs["max_passspray_uniquser"].as_i64();
+            if config_value.is_some() {
+                self.max_passspray_uniquser = config_value.unwrap() as i32;
+            }        
+        }
+        {
+            let config_value = configs["max_total_sensitive_privuse"].as_i64();
+            if config_value.is_some() {
+                self.max_total_sensitive_privuse = config_value.unwrap() as i32;
+            }        
+        }
+    }
+
     pub fn detection(
         &mut self,
         event_id: String,
@@ -93,6 +151,8 @@ impl Security {
         user_data: &Option<event::UserData>,
         event_data: HashMap<String, String>,
     ) {
+        self.setup_configs();
+
         self.process_created(&event_id, &event_data, &system.time_created.system_time);
         self.se_debug_privilege(&event_id, &event_data, &system.time_created.system_time);
         self.account_created(&event_id, &event_data, &system.time_created.system_time)
@@ -134,10 +194,12 @@ impl Security {
         let creator = event_data
             .get("ParentProcessName")
             .unwrap_or(&self.empty_str);
+        let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+        let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
         utils::check_command(
             4688,
             &commandline,
-            1000,
+            value as usize,
             0,
             &self.empty_str,
             &creator,
@@ -157,6 +219,11 @@ impl Security {
         if event_id != "4672" {
             return;
         }
+
+        //// "Multiple admin logons for one account"
+
+
+
 
         if let Some(privileage_list) = event_data.get("PrivilegeList") {
             if let Some(_data) = privileage_list.find("SeDebugPrivilege") {
@@ -951,7 +1018,7 @@ mod tests {
 
         let mut sec = security::Security::new();
 
-        sec.max_failed_logons = 5;
+        sec.max_total_failed_logons = 5;
         let ite = [1, 2, 3, 4, 5, 6, 7].iter();
         ite.for_each(|i| {
             sec.failed_logon(
@@ -975,7 +1042,7 @@ mod tests {
         .unwrap();
 
         let mut sec = security::Security::new();
-        sec.max_failed_logons = 5;
+        sec.max_total_failed_logons = 5;
 
         // メッセージが表示されるには2ユーザー以上失敗している必要がある。まず一人目
         sec.failed_logon(
@@ -1049,7 +1116,7 @@ mod tests {
         .unwrap();
 
         let mut sec = security::Security::new();
-        sec.max_failed_logons = 5;
+        sec.max_total_failed_logons = 5;
 
         // メッセージが表示されるには2ユーザー以上失敗している必要がある。まず一人目
         sec.failed_logon(

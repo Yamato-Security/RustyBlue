@@ -3,6 +3,8 @@ use crate::detections::utils;
 use crate::models::event;
 use std::collections::HashMap;
 
+use super::configs;
+
 #[derive(Debug)]
 pub struct System {}
 
@@ -65,7 +67,9 @@ impl System {
             msges.push(format!("Results: {}", text));
         }
         if !commandline.is_empty() {
-            utils::check_command(7045, &commandline, 1000, 1, &servicename, &"", &system_time);
+            let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+            let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
+            utils::check_command(7045, &commandline, value as usize, 1, &servicename, &"", &system_time);
         }
         return Option::Some(msges);
     }

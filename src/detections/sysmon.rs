@@ -2,6 +2,9 @@ use crate::detections::print::MessageNotation;
 use crate::detections::utils::check_command;
 use crate::models::event;
 use std::collections::HashMap;
+use std::usize;
+
+use super::configs;
 
 pub struct Sysmon {
     checkunsigned: u16,
@@ -36,7 +39,9 @@ impl Sysmon {
             let default = "".to_string();
             let _creater = event_data.get("ParentImage").unwrap_or(&default);
 
-            check_command(1, _command_line, 1000, 0, "", _creater, &system_time);
+            let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+            let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
+            check_command(1, _command_line, value as usize, 0, "", _creater, &system_time);
         }
     }
 

@@ -110,8 +110,9 @@ fn check_obfu(string: &str) -> std::string::String {
     let mut obfutext = "".to_string();
     let lowercasestring = string.to_lowercase();
     let length = lowercasestring.len() as f64;
-    let mut minpercent = 0.65;
-    let maxbinary = 0.50;
+    let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+    let mut minpercent = configs["obfuscation_minpercent"].as_f64().unwrap_or(0.65);
+    let maxbinary = configs["obfuscation_maxbinary"].as_f64().unwrap_or(0.5);
 
     let noalphastring = configs::CONFIG
         .noalpha_regex
