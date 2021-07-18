@@ -1,12 +1,13 @@
 extern crate serde_derive;
 extern crate yaml_rust;
 
-use crate::detections::print::MessageNotation;
-use std::fs;
-use std::io;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
+use std::{fs, io};
+
 use yaml_rust::YamlLoader;
+
+use crate::detections::print::MessageNotation;
 
 pub struct ParseYaml {
     pub files: Vec<yaml_rust::Yaml>,
@@ -30,6 +31,22 @@ impl ParseYaml {
         Ok(file_content)
     }
 
+    pub fn read_yaml_file(&mut self, path: PathBuf) -> Result<(), String> {
+        let file = self.read_file(path)?;
+
+        let load_result = YamlLoader::load_from_str(&file);
+        if load_result.is_err() {
+            return Result::Err(format!("fail to read file\n{} ", load_result.unwrap_err()));
+        }
+
+        let load_yamls = load_result.unwrap();
+        load_yamls.into_iter().for_each(|loaded_yaml| {
+            self.files.push(loaded_yaml);
+        });
+
+        return Result::Ok(());
+    }
+
     pub fn read_dir<P: AsRef<Path>>(&mut self, path: P) -> io::Result<String> {
         Ok(fs::read_dir(path)?
             .filter_map(|entry| {
@@ -49,12 +66,20 @@ impl ParseYaml {
                                     }
                                 }
                                 Err(e) => {
-                                    MessageNotation::info_noheader(&mut stdout, format!("fail to read file\n{}\n{} ", s, e));
+                                    MessageNotation::info_noheader(
+                                        &mut stdout,
+                                        format!("fail to read file\n{}\n{} ", s, e),
+                                    )
+                                    .ok();
                                 }
                             }
                         }
                         Err(e) => {
-                            MessageNotation::info_noheader(&mut stdout, format!("fail to read file: {}\n{} ", entry.path().display(), e));
+                            MessageNotation::info_noheader(
+                                &mut stdout,
+                                format!("fail to read file: {}\n{} ", entry.path().display(), e),
+                            )
+                            .ok();
                         }
                     };
                 }
@@ -70,16 +95,9 @@ impl ParseYaml {
 #[cfg(test)]
 mod tests {
 
-    use crate::yaml;
+    use crate::detections::yaml;
     use std::path::Path;
     use yaml_rust::YamlLoader;
-
-    #[test]
-    fn test_read_dir_yaml() {
-        let mut yaml = yaml::ParseYaml::new();
-        &yaml.read_dir("test_files/rules/yaml/".to_string());
-        assert_ne!(yaml.files.len(), 0);
-    }
 
     #[test]
     fn test_read_yaml() {

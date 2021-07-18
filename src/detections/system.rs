@@ -67,9 +67,17 @@ impl System {
             msges.push(format!("Results: {}", text));
         }
         if !commandline.is_empty() {
-            let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+            let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
             let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
-            utils::check_command(7045, &commandline, value as usize, 1, &servicename, &"", &system_time);
+            utils::check_command(
+                7045,
+                &commandline,
+                value as usize,
+                1,
+                &servicename,
+                &"",
+                &system_time,
+            );
         }
         return Option::Some(msges);
     }

@@ -45,9 +45,17 @@ impl PowerShell {
                 .replace_all(&temp_command_with_extra, "");
 
             if command != "" {
-                let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+                let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
                 let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
-                utils::check_command(4103, &command, value as usize, 0, &default, &default, &system_time);
+                utils::check_command(
+                    4103,
+                    &command,
+                    value as usize,
+                    0,
+                    &default,
+                    &default,
+                    &system_time,
+                );
             }
         }
     }
@@ -67,7 +75,7 @@ impl PowerShell {
         if path == "".to_string() {
             let commandline = event_data.get("ScriptBlockText").unwrap_or(&default);
             if commandline.to_string() != default {
-                let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+                let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
                 let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
 
                 utils::check_command(

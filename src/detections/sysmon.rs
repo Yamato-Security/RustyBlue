@@ -39,9 +39,17 @@ impl Sysmon {
             let default = "".to_string();
             let _creater = event_data.get("ParentImage").unwrap_or(&default);
 
-            let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+            let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
             let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
-            check_command(1, _command_line, value as usize, 0, "", _creater, &system_time);
+            check_command(
+                1,
+                _command_line,
+                value as usize,
+                0,
+                "",
+                _creater,
+                &system_time,
+            );
         }
     }
 

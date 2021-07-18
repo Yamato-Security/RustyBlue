@@ -3,7 +3,6 @@ use crate::detections::yaml::ParseYaml;
 use clap::{App, AppSettings, ArgMatches};
 use lazy_static::lazy_static;
 use regex::Regex;
-use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
@@ -91,8 +90,8 @@ fn build_app<'a>() -> ArgMatches<'a> {
 // config.ymlを読み込みます
 fn load_config_file() -> yaml_rust::Yaml {
     // read file
-    let parser = ParseYaml::new();
-    let result = parser.read_file(PathBuf::from("config.yml"));
+    let mut parser = ParseYaml::new();
+    let result = parser.read_yaml_file(PathBuf::from("./config.yml"));
     if result.is_err() {
         panic!("canot read config file(config.yml).");
     }

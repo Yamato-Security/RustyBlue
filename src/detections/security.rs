@@ -32,7 +32,7 @@ impl Security {
             max_passspray_login: 6,
             max_passspray_uniquser: 6,
             max_total_failed_logons: 5,
-            max_failed_logons:5, 
+            max_failed_logons: 5,
             alert_all_admin: 0,
             show_total_admin_logons: 0,
             total_admin_logons: 0,
@@ -77,12 +77,16 @@ impl Security {
     }
 
     fn disp_login_failed(&self) -> Option<Vec<String>> {
-        let exceed_failed_logons = self.total_failed_logons <= self.max_total_failed_logons;
-        if exceed_failed_logons {
+        if self.total_failed_logons <= self.max_total_failed_logons {
+            return Option::None;
+        }
+        // 複数ユーザーで検知した場合にしか表示しない。
+        if self.account_2_failedcnt.keys().count() < 2 {
             return Option::None;
         }
 
         let mut msges: Vec<String> = Vec::new();
+        msges.push(format!("EventID : 4625"));
         msges.push(format!(
             "Message: High number of total logon failures for multiple accounts"
         ));
@@ -98,8 +102,8 @@ impl Security {
         return Option::Some(msges);
     }
 
-    fn setup_configs(&mut self,) {
-        let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+    fn setup_configs(&mut self) {
+        let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
         {
             let config_value = configs["alert_all_admin"].as_i64();
             if config_value.is_some() {
@@ -110,37 +114,37 @@ impl Security {
             let config_value = configs["show_total_admin_logons"].as_i64();
             if config_value.is_some() {
                 self.show_total_admin_logons = config_value.unwrap() as i32;
-            }        
+            }
         }
         {
             let config_value = configs["max_total_failed_logons"].as_i64();
             if config_value.is_some() {
                 self.max_total_failed_logons = config_value.unwrap() as i32;
-            }        
+            }
         }
         {
             let config_value = configs["max_failed_logons"].as_i64();
             if config_value.is_some() {
                 self.max_failed_logons = config_value.unwrap() as i32;
-            }        
+            }
         }
         {
             let config_value = configs["max_passspray_login"].as_i64();
             if config_value.is_some() {
                 self.max_passspray_login = config_value.unwrap() as i32;
-            }        
+            }
         }
         {
             let config_value = configs["max_passspray_uniquser"].as_i64();
             if config_value.is_some() {
                 self.max_passspray_uniquser = config_value.unwrap() as i32;
-            }        
+            }
         }
         {
             let config_value = configs["max_total_sensitive_privuse"].as_i64();
             if config_value.is_some() {
                 self.max_total_sensitive_privuse = config_value.unwrap() as i32;
-            }        
+            }
         }
     }
 
@@ -194,7 +198,7 @@ impl Security {
         let creator = event_data
             .get("ParentProcessName")
             .unwrap_or(&self.empty_str);
-        let configs:& yaml_rust::Yaml = &configs::CONFIG.configs;
+        let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
         let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
         utils::check_command(
             4688,
@@ -221,9 +225,6 @@ impl Security {
         }
 
         //// "Multiple admin logons for one account"
-
-
-
 
         if let Some(privileage_list) = event_data.get("PrivilegeList") {
             if let Some(_data) = privileage_list.find("SeDebugPrivilege") {
@@ -1062,6 +1063,10 @@ mod tests {
             if fail_cnt > 5 {
                 let v = sec.disp_login_failed().unwrap();
                 let mut ite = v.iter();
+                assert_eq!(
+                    &"EventID : 4625".to_string(),
+                    ite.next().unwrap_or(&"".to_string())
+                );
                 assert_eq!(
                     &"Message: High number of total logon failures for multiple accounts"
                         .to_string(),
