@@ -14,6 +14,7 @@ fn main() {
         for target_path in target_paths {
             println!("---------------------");
             println!("{}", target_path.display().to_string());
+            println!("");
             parse_file(&target_path.display().to_string());
             println!("---------------------");
         }
@@ -21,6 +22,14 @@ fn main() {
 
     if configs::CONFIG.args.is_present("credits") {
         print_credits();
+    }
+
+    if configs::CONFIG.args.args.len() == 0 {
+        MessageNotation::info_noheader(
+            &mut std::io::stdout().lock(),
+            configs::CONFIG.args.usage().to_string(),
+        )
+        .ok();
     }
 }
 
