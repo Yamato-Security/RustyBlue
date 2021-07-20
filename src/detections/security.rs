@@ -55,27 +55,36 @@ impl Security {
         self.disp_multiple_sid_logon()
             .into_iter()
             .for_each(|msges| {
+                if msges.is_empty() {
+                    return;
+                }
                 Security::print_console(msges);
             });
         self.disp_login_failed().and_then(Security::print_console);
         self.disp_login_failed_for_oneuser()
             .into_iter()
             .for_each(|msges| {
+                if msges.is_empty() {
+                    return;
+                }
+
                 Security::print_console(msges);
             });
     }
 
     fn disp_admin_logons(&self) -> Option<Vec<String>> {
+        if self.show_total_admin_logons == 0 {
+            return Option::None;
+        }
+
         if self.total_admin_logons < 1 {
             return Option::None;
         }
 
         // オプションが有効になっている場合のみ、表示する。
         let mut msges: Vec<String> = Vec::new();
-        if self.show_total_admin_logons == 1 {
-            msges.push("EventID : 4672".to_string());
-            msges.push(format!("Total Admin Logon: {}", self.total_admin_logons));
-        }
+        msges.push("EventID : 4672".to_string());
+        msges.push(format!("Total Admin Logon: {}", self.total_admin_logons));
 
         return Option::Some(msges);
     }
