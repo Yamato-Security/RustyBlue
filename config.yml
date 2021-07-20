@@ -1,0 +1,22 @@
+{
+    # Minimum length of command line to alert
+    "minlength": 1000,
+    # Set to 1 to alert every admin logon (set to 0 disable this)
+    "alert_all_admin": 0,
+    # Set to 1 to show total admin logon (set to 0 disable this)
+    "show_total_admin_logons": 0,
+    # if failed logon count exceed this value, Rusty Blue show message, "High number of total logon failures for multiple accounts".
+    "max_total_failed_logons": 5,
+    # if failed logon count for specified user exceed this value, Rusty Blue show message, "High number of logon failures for one account".
+    "max_failed_logons": 5,
+    # if logon count by specified user exceed this value, Rusty Blue count the user as passspray uniqe user. 
+    "max_passspray_login": 6,
+    # if passspray uniq user count exceed this value, Rusty Blue show message, "Sensitive Privilege Use Exceeds Threshold".
+    "max_passspray_uniquser": 6,
+    # if Sensitive Privilege Use count exceed this value, Rusty Blue show message "Sensitive Privilege Use Exceeds Threshold".
+    "max_total_sensitive_privuse": 4,
+    # if rate of non-ascii data exceed this value, Rusty Blue show message Possible command obfuscation
+    "obfuscation_minpercent": 0.65,
+    # if rate of binary format data exceed this value, Rusty Blue show message Possible command obfuscation
+    "obfuscation_maxbinary": 0.50
+}
