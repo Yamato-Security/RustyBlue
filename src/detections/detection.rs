@@ -117,7 +117,6 @@ impl Detection {
         ////////////////////////////
         // 表示
         ////////////////////////////
-        common.disp();
         security.disp();
 
         return Ok(());

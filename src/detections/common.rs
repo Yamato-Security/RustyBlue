@@ -18,18 +18,6 @@ impl Common {
         }
     }
 
-    pub fn disp(&self) {
-        let stdout = std::io::stdout();
-        let mut stdout = stdout.lock();
-        for (record_id, date) in self.record_id_list.iter() {
-            MessageNotation::info_noheader(
-                &mut stdout,
-                format!("date:{:?} record-id: {:?}", date, record_id),
-            )
-            .ok();
-        }
-    }
-
     pub fn detection(&mut self, system: &event::System, _event_data: &HashMap<String, String>) {
         self.check_record_id(system);
     }
