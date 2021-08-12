@@ -1,39 +1,52 @@
 # RustyBlue
 
-RustyBlue is a software ported from DeepBlueCLI in Rust language. We admire the DeepBlueCLI.
+RustyBlue is a Rust implementation of Eric Conrad's DeepBlueCLI, a DFIR tool that detects various Windows attacks by analyzing event logs. It cannot take advantage of some of the PowerShell features to do remote investigations or use a GUI but it is very lightweight and fast so its main purpose is to be used on large event log files and to be a reference for writing more Windows event log analysis tools in Rust.
+
+DeepBlueCLI: https://github.com/sans-blue-team/DeepBlueCLI
 
 RustyBlueはDeepBlueCLIをRust言語で移植されたソフトです。私たちは、DeepBlueCLIを称賛しています。
 
 ## Usage
 
 `````````````````````
--f --filepath=[FILEPATH] 'analyze event file'
--d --dirpath=[DIRECTORYPATH] 'analyze event log files in directory'
--c --credits 'print credits infomation'
+Analyze one event log file:
+-f or --filepath=<FilePath>
+
+Analyze event log files in a directory:
+-d or --dirpath=<DirectoryPath>
+
+Print credits:
+-c or --credits
 `````````````````````
 
-## Usage Example
+## Usage Examples
 
-### Analysis one event log for specified path
+### Analyzing one event log:
 
-コンパイルされたバイナリを使用する場合、下記のようなコマンドで実行することができます。
+コンパイルされたバイナリを使用する場合、下記のようなコマンドで実行することができます:
 
 ``````````
 rusty_blue.exe --filepath=C:\Users\user\Downloads\security.evtx
 ``````````
 
-### Analysis recusively all event logs in specified directory
+### Analyzing recusively all event logs in specified directory:
 
-コンパイルされたバイナリを使用する場合、下記のようなコマンドで実行することができます。
+コンパイルされたバイナリを使用する場合、下記のようなコマンドで実行することができます:
 
 ``````````
-rusty_blue.exe --dirpath=C:\Users\user\Downloads
+rusty_blue.exe --dirpath=C:\WindowsEventLogs
 ``````````
 
-### Build from source code
+### Building from source code:
 
-以下コマンドでcloneしたソースコードからコンパイルすることができます。Rustのコンパイル環境をローカル環境に導入していることが条件です。
+You can compile the cloned source code with the following command.
+
+以下コマンドでcloneしたソースコードからコンパイルすることができます。Rustのコンパイル環境をローカル環境に導入していることが条件です:
 
 ``````````
 cargo build --release
 ``````````
+
+### RustyBlue v1.0 Binaries
+
+You can download the compiled binaries for Windows, Linux and MacOS here: https://github.com/Yamato-Security/RustyBlue/releases/tag/v1.0
