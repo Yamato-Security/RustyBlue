@@ -79,7 +79,7 @@ fn build_app<'a>() -> ArgMatches<'a> {
     -c --credits 'print credits infomation'";
     App::new(program)
         .about("RustyBlue")
-        .version("1.0.0")
+        .version("1.0.1")
         .author("YamatoSecurity <info@yamatosecurity.com>")
         .setting(AppSettings::VersionlessSubcommands)
         .usage(usagees)

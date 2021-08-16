@@ -1,13 +1,13 @@
-Zach Mathis (田中ザック）Yamato Security Yea! Project Leader
-Nishikawa Akira (twitter:@nishikawaakira) Lead Developer
-kazuminn (twitter:@k2warugaki) Developer
-itiB (twitter:@itiB_S144) Developer
-hachiyone (twitter:@hach1yone) Developer
+Zach Mathis (田中ザック）(@yamatosecurity) Project Leader
+Nishikawa Akira (twitter: @nishikawaakira) Lead Developer
+kazuminn (twitter: @k2warugaki) Developer
+itiB (twitter: @itiB_S144) Developer
+hachiyone (twitter: @hach1yone) Developer
 DustInDark (Github: @hitenkoku) Developer
-garigariganzy (twitter:@garigariganzy31) Developer
+garigariganzy (twitter: @garigariganzy31) Developer
 7itoh (twitter:@yNitocrypto22) Developer
 dai (twitter: @__da13__) Developer
-siam(GitHun: @siamease) Developer
+siam (GitHub: @siamease) Developer
 mimura (twitter: @mimura1133) Developer
 apt773 (twitter: @apt773) Rule testing and supporter
 TAKIZAWA Hiroki (twitter:@hr_zwtk) Rule testing and supporter
