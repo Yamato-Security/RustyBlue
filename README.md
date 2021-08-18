@@ -47,6 +47,6 @@ You can compile the cloned source code with the following command.
 cargo build --release
 ``````````
 
-### RustyBlue v1.0 Binaries
+### RustyBlue Binaries
 
-You can download the compiled binaries for Windows, Linux and MacOS here: https://github.com/Yamato-Security/RustyBlue/releases/tag/v1.0
+You can download the compiled binaries for Windows, Linux and MacOS here: https://github.com/Yamato-Security/RustyBlue/releases/
