@@ -36,18 +36,18 @@ impl System {
         let mut stdout = stdout.lock();
         if !v.is_empty() {
             v.iter().for_each(|s| {
-                MessageNotation::info_noheader(&mut stdout, format!("{}", s)).ok();
+                MessageNotation::info_noheader(&mut stdout, s.to_string()).ok();
             });
             MessageNotation::info_noheader(&mut stdout, format!("")).ok();
         }
-        return Option::Some(v);
+        Option::Some(v)
     }
 
     fn new_service_created(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) -> Option<Vec<String>> {
         if event_id != "7045" {
             return Option::None;
@@ -56,7 +56,7 @@ impl System {
         let default = String::from("");
         let servicename = &event_data.get("ServiceName").unwrap_or(&default);
         let commandline = &event_data.get("ImagePath").unwrap_or(&default);
-        let text = utils::check_regex(&servicename, 1);
+        let text = utils::check_regex(servicename, 1);
         let mut msges: Vec<String> = Vec::new();
         if !text.is_empty() {
             msges.push(format!("Date: {}", system_time));
@@ -68,31 +68,31 @@ impl System {
         }
         if !commandline.is_empty() {
             let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
-            let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
+            let value = configs["minlength"].as_i64().unwrap_or(1000);
             utils::check_command(
                 7045,
-                &commandline,
+                commandline,
                 value as usize,
                 1,
-                &servicename,
-                &"",
-                &system_time,
+                servicename,
+                "",
+                system_time,
             );
         }
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 
     fn interactive_service_warning(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) -> Option<Vec<String>> {
         if event_id != "7030" {
             return Option::None;
         }
 
-        let default = String::from("");
+        let default = String::default();
         let servicename = &event_data.get("param1").unwrap_or(&default);
         let mut msges: Vec<String> = Vec::new();
         msges.push(format!("Date: {}", system_time));
@@ -102,23 +102,23 @@ impl System {
         msges.push(
             "Results: Malware (and some third party software) trigger this warning".to_string(),
         );
-        msges.push(format!("{}", utils::check_regex(&servicename, 1)));
-        return Option::Some(msges);
+        msges.push(utils::check_regex(servicename, 1));
+        Option::Some(msges)
     }
 
     fn suspicious_service_name(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) -> Option<Vec<String>> {
         if event_id != "7036" {
             return Option::None;
         }
 
-        let default = String::from("");
+        let default = String::default();
         let servicename = &event_data.get("param1").unwrap_or(&default);
-        let text = utils::check_regex(&servicename, 1);
+        let text = utils::check_regex(servicename, 1);
         let mut msges: Vec<String> = Vec::new();
         if !text.is_empty() {
             msges.push(format!("Date: {}", system_time));
@@ -127,10 +127,10 @@ impl System {
             msges.push(format!("Results: Service name: {}", servicename));
             msges.push(format!("Results: {}", text));
         }
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 
-    fn system_log_clear(&mut self, event_id: &String, system_time: &String) -> Option<Vec<String>> {
+    fn system_log_clear(&mut self, event_id: &str, system_time: &str) -> Option<Vec<String>> {
         if event_id != "104" {
             return Option::None;
         }
@@ -140,14 +140,14 @@ impl System {
         msges.push("Message: System Log Clear".to_string());
         msges.push("EventID: 104".to_string());
         msges.push("Results: The System log was cleared.".to_string());
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 
     fn windows_event_log(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) -> Option<Vec<String>> {
         if event_id != "7040" {
             return Option::None;
@@ -175,7 +175,7 @@ impl System {
                 }
             }
         }
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 }
 
@@ -195,7 +195,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -235,7 +235,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -256,7 +256,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -276,7 +276,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
         let mut sys = system::System::new();
@@ -320,7 +320,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -342,7 +342,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -362,7 +362,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
         let mut sys = system::System::new();
@@ -433,7 +433,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
         let mut sys = system::System::new();
@@ -476,7 +476,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -490,7 +490,7 @@ mod tests {
     }
 
     fn get_system_log_clear_xml() -> String {
-        return r#"
+        r#"
         <?xml version="1.0" encoding="utf-8"?>
         <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
           <System>
@@ -522,11 +522,11 @@ mod tests {
               <BackupPath></BackupPath>
             </LogFileCleared>
           </UserData>
-        </Event>"#.to_string();
+        </Event>"#.to_string()
     }
 
     fn get_system_service_created_xml() -> String {
-        return r#"
+        r##"
         <?xml version="1.0" encoding="utf-8"?>
         <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
           <System>
@@ -557,10 +557,10 @@ mod tests {
             <Data Name="StartType">demand start</Data>
             <Data Name="AccountName"></Data>
           </EventData>
-        </Event>"#.to_string();
+        </Event>"##.to_string()
     }
     fn get_interactive_service_warning() -> String {
-        return r#"
+        r#"
         <?xml version="1.0" encoding="utf-8"?>
         <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
           <System>
@@ -587,10 +587,10 @@ mod tests {
           <EventData>
             <Data Name="param1">Printer Extensions and Notifications</Data>
           </EventData>
-        </Event>"#.to_string();
+        </Event>"#.to_string()
     }
     fn get_suspicious_service_name() -> String {
-        return r#"
+        r#"
         <?xml version="1.0" encoding="utf-8"?>
         <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
           <System>
@@ -617,11 +617,11 @@ mod tests {
           <EventData>
             <Data Name="param1">abcdefghABCDEFGH</Data>
           </EventData>
-        </Event>"#.to_string();
+        </Event>"#.to_string()
     }
 
     fn get_windows_event_log() -> String {
-        return r#"
+        r#"
         <?xml version="1.0" encoding="utf-8"?>
         <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
           <System>
@@ -651,6 +651,6 @@ mod tests {
             <Data Name="param3">auto start</Data>
             <Data Name="param4">BITS</Data>
           </EventData>
-        </Event>"#.to_string();
+        </Event>"#.to_string()
     }
 }

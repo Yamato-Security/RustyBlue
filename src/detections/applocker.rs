@@ -18,41 +18,44 @@ impl AppLocker {
         _system: &event::System,
         _event_data: HashMap<String, String>,
     ) {
-        self.applocker_log_warning(&event_id, &_system);
-        self.applocker_log_block(&event_id, &_system);
+        self.applocker_log_warning(&event_id, _system);
+        self.applocker_log_block(&event_id, _system);
     }
 
-    fn applocker_log_warning(&mut self, event_id: &String, system: &event::System) {
+    fn applocker_log_warning(&mut self, event_id: &str, system: &event::System) {
         if event_id != "8003" {
             return;
         }
 
         let default = "".to_string();
         let message = &system.message.as_ref().unwrap_or(&default);
-        let command = configs::CONFIG.applocker_regex.replace_all(&message, "");
+        let command = configs::CONFIG.applocker_regex.replace_all(message, "");
 
         let stdout = std::io::stdout();
         let mut stdout = stdout.lock();
-        MessageNotation::info_noheader(&mut stdout, format!("Message: Message Applocker Warning"))
-            .ok();
+        MessageNotation::info_noheader(
+            &mut stdout,
+            "Message: Message Applocker Warning".to_string(),
+        )
+        .ok();
         MessageNotation::info_noheader(&mut stdout, "EventID: 8003".to_string()).ok();
         MessageNotation::info_noheader(&mut stdout, format!("Command: {}", command)).ok();
         MessageNotation::info_noheader(&mut stdout, format!("Results: {}", message)).ok();
     }
 
-    fn applocker_log_block(&mut self, event_id: &String, system: &event::System) {
+    fn applocker_log_block(&mut self, event_id: &str, system: &event::System) {
         if event_id != "8004" {
             return;
         }
 
         let default = "".to_string();
         let message = &system.message.as_ref().unwrap_or(&default);
-        let command = configs::CONFIG.applocker_regex.replace_all(&message, "");
+        let command = configs::CONFIG.applocker_regex.replace_all(message, "");
 
         let stdout = std::io::stdout();
         let mut stdout = stdout.lock();
 
-        MessageNotation::info_noheader(&mut stdout, format!("Message: Message Applocker Block"))
+        MessageNotation::info_noheader(&mut stdout, "Message: Message Applocker Block".to_string())
             .ok();
         MessageNotation::info_noheader(&mut stdout, "EventID: 8004".to_string()).ok();
         MessageNotation::info_noheader(&mut stdout, format!("Command: {}", command)).ok();

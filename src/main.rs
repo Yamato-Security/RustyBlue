@@ -14,7 +14,7 @@ fn main() {
         for target_path in target_paths {
             println!("---------------------");
             println!("{}", target_path.display().to_string());
-            println!("");
+            println!();
             parse_file(&target_path.display().to_string());
             println!("---------------------");
         }
@@ -24,7 +24,7 @@ fn main() {
         print_credits();
     }
 
-    if configs::CONFIG.args.args.len() == 0 {
+    if configs::CONFIG.args.args.is_empty() {
         MessageNotation::info_noheader(
             &mut std::io::stdout().lock(),
             configs::CONFIG.args.usage().to_string(),
@@ -38,7 +38,7 @@ fn print_credits() {
         Ok(contents) => {
             let stdout = std::io::stdout();
             let mut stdout = stdout.lock();
-            MessageNotation::info_noheader(&mut stdout, format!("{}", contents)).ok();
+            MessageNotation::info_noheader(&mut stdout, contents).ok();
         }
         Err(err) => {
             let stdout = std::io::stdout();
@@ -61,7 +61,12 @@ fn parse_file(filepath: &str) {
     };
 
     let mut detection = detection::Detection::new();
-    &detection.start(parser);
+    let result = detection.start(parser);
+    if result.is_err() {
+        let stdout = std::io::stdout();
+        let mut stdout = stdout.lock();
+        MessageNotation::alert(&mut stdout, format!("{}", result.unwrap_err())).ok();
+    }
 }
 
 fn parse_dir(dirpath: &str) -> Vec<PathBuf> {
@@ -79,11 +84,10 @@ fn parse_dir(dirpath: &str) -> Vec<PathBuf> {
         }
         let path = f.unwrap().path();
         if path.is_dir() {
-            path.to_str().and_then(|path_str| {
+            if let Some(path_str) = path.to_str() {
                 let subdir_ret = parse_dir(path_str);
                 ret.extend(subdir_ret);
-                return Option::Some(());
-            });
+            }
         } else {
             let path_str = path.to_str().unwrap_or("");
             if path_str.ends_with(".evtx") {
@@ -91,7 +95,7 @@ fn parse_dir(dirpath: &str) -> Vec<PathBuf> {
             }
         }
     }
-    return ret;
+    ret
 }
 
 #[cfg(test)]

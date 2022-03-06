@@ -16,7 +16,7 @@ pub fn check_command(
     servicecmd: usize,
     servicename: &str,
     creator: &str,
-    system_time: &String,
+    system_time: &str,
 ) {
     let mut text = "".to_string();
     let mut base64 = "".to_string();
@@ -86,7 +86,7 @@ pub fn check_command(
         if servicecmd != 0 {
             MessageNotation::info_noheader(
                 &mut stdout,
-                format!("Message: Suspicious Service Command"),
+                "Message: Suspicious Service Command".to_string(),
             )
             .ok();
             MessageNotation::info_noheader(
@@ -97,7 +97,7 @@ pub fn check_command(
         } else {
             MessageNotation::info_noheader(
                 &mut stdout,
-                format!("Message: Suspicious Command Line"),
+                "Message: Suspicious Command Line".to_string(),
             )
             .ok();
         }
@@ -144,7 +144,7 @@ fn check_obfu(string: &str) -> std::string::String {
             obfutext.push_str("% zeroes and ones (possible numeric or binary encoding)\n");
         }
     }
-    return obfutext;
+    obfutext
 }
 
 pub fn check_regex(string: &str, r#type: usize) -> std::string::String {
@@ -161,12 +161,11 @@ pub fn check_regex(string: &str, r#type: usize) -> std::string::String {
             continue;
         }
 
-        if configs::CONFIG
+        if !configs::CONFIG
             .regexes
             .get(regex_str)
             .unwrap()
             .is_match(string)
-            == false
         {
             continue;
         }
@@ -177,28 +176,26 @@ pub fn check_regex(string: &str, r#type: usize) -> std::string::String {
         }
 
         regextext.push_str(text);
-        regextext.push_str("\n");
+        regextext.push('\n');
     }
 
-    return regextext;
+    regextext
 }
 
 fn check_creator(command: &str, creator: &str) -> std::string::String {
     let mut creatortext = "".to_string();
-    if !creator.is_empty() {
-        if command == "powershell" {
-            if creator == "PSEXESVC" {
-                creatortext.push_str("PowerShell launched via PsExec: ");
-                creatortext.push_str(creator);
-                creatortext.push_str("\n");
-            } else if creator == "WmiPrvSE" {
-                creatortext.push_str("PowerShell launched via WMI: ");
-                creatortext.push_str(creator);
-                creatortext.push_str("\n");
-            }
+    if !creator.is_empty() && command == "powershell" {
+        if creator == "PSEXESVC" {
+            creatortext.push_str("PowerShell launched via PsExec: ");
+            creatortext.push_str(creator);
+            creatortext.push('\n');
+        } else if creator == "WmiPrvSE" {
+            creatortext.push_str("PowerShell launched via WMI: ");
+            creatortext.push_str(creator);
+            creatortext.push('\n');
         }
     }
-    return creatortext;
+    creatortext
 }
 
 #[cfg(test)]

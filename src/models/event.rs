@@ -109,7 +109,7 @@ impl Evtx {
         if let Some(text) = &v.text {
             ret = text.to_string();
         }
-        return ret;
+        ret
     }
 
     //

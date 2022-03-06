@@ -23,9 +23,9 @@ impl PowerShell {
 
     fn execute_pipeline(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) {
         if event_id != "4103" {
             return;
@@ -46,7 +46,7 @@ impl PowerShell {
 
             if command != "" {
                 let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
-                let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
+                let value = configs["minlength"].as_i64().unwrap_or(1000);
                 utils::check_command(
                     4103,
                     &command,
@@ -54,7 +54,7 @@ impl PowerShell {
                     0,
                     &default,
                     &default,
-                    &system_time,
+                    system_time,
                 );
             }
         }
@@ -62,9 +62,9 @@ impl PowerShell {
 
     fn execute_remote_command(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) {
         if event_id != "4104" {
             return;
@@ -72,20 +72,20 @@ impl PowerShell {
 
         let default = String::from("");
         let path = event_data.get("Path").unwrap().to_string();
-        if path == "".to_string() {
+        if path.is_empty() {
             let commandline = event_data.get("ScriptBlockText").unwrap_or(&default);
-            if commandline.to_string() != default {
+            if commandline != &default {
                 let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
-                let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
+                let value = configs["minlength"].as_i64().unwrap_or(1000);
 
                 utils::check_command(
                     4104,
-                    &commandline,
+                    commandline,
                     value as usize,
                     0,
                     &default,
                     &default,
-                    &system_time,
+                    system_time,
                 );
             }
         }

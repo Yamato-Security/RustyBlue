@@ -27,9 +27,9 @@ impl Sysmon {
 
     fn check_command_lines(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) {
         if event_id != "1" {
             return;
@@ -40,7 +40,7 @@ impl Sysmon {
             let _creater = event_data.get("ParentImage").unwrap_or(&default);
 
             let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
-            let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
+            let value = configs["minlength"].as_i64().unwrap_or(1000);
             check_command(
                 1,
                 _command_line,
@@ -48,16 +48,16 @@ impl Sysmon {
                 0,
                 "",
                 _creater,
-                &system_time,
+                system_time,
             );
         }
     }
 
     fn check_for_unsigned_files(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) {
         if event_id != "7" {
             return;
@@ -75,7 +75,7 @@ impl Sysmon {
                 MessageNotation::info_noheader(&mut stdout, "EventID: 7".to_string()).ok();
                 MessageNotation::info_noheader(
                     &mut stdout,
-                    format!("Message: Unsigned Image (DLL)"),
+                    "Message: Unsigned Image (DLL)".to_string(),
                 )
                 .ok();
                 MessageNotation::info_noheader(

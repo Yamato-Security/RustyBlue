@@ -60,9 +60,15 @@ impl ConfigReader {
     }
 }
 
+impl Default for ConfigReader {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn build_app<'a>() -> ArgMatches<'a> {
     let program = std::env::args()
-        .nth(0)
+        .next()
         .and_then(|s| {
             std::path::PathBuf::from(s)
                 .file_stem()
@@ -96,7 +102,7 @@ fn load_config_file() -> yaml_rust::Yaml {
         panic!("canot read config file(config.yml).");
     }
 
-    return parser.files.into_iter().next().unwrap();
+    parser.files.into_iter().next().unwrap()
 }
 
 fn is_test_mode() -> bool {
@@ -106,7 +112,7 @@ fn is_test_mode() -> bool {
         }
     }
 
-    return false;
+    false
 }
 
 fn read_csv(filename: &str) -> Vec<Vec<String>> {
@@ -170,8 +176,8 @@ pub fn get_regexes(regexes: Vec<Vec<String>>) -> HashMap<String, Regex> {
         }
 
         let re = Regex::new(regex_str);
-        if re.is_ok() {
-            ret.insert(regex_str.to_string(), re.unwrap());
+        if let Ok(regex_obj) = re {
+            ret.insert(regex_str.to_string(), regex_obj);
         }
     }
 
@@ -189,48 +195,39 @@ mod tests {
     #[test]
     #[ignore]
     fn test_is_test_mode_true() {
-        assert_eq!(true, configs::is_test_mode());
-        assert_ne!(false, configs::is_test_mode());
+        assert!(configs::is_test_mode());
     }
 
     // cargo test -- test_is_test_mode_false で実行
     #[test]
     #[ignore]
     fn test_is_test_mode_false() {
-        assert_eq!(false, configs::is_test_mode());
-        assert_ne!(true, configs::is_test_mode());
+        assert!(!configs::is_test_mode());
     }
 
     #[test]
     fn test_get_regexes() {
         let mut regexes: Vec<Vec<String>> = Vec::new();
-        let mut tmp = Vec::new();
-        tmp.push("0".to_string());
-        tmp.push("^cmd.exe /c echo [a-z]{6} > \\\\\\\\.\\\\pipe\\\\[a-z]{6}$".to_string());
-        tmp.push(
+        let tmp = vec![
+            "0".to_string(),
+            "^cmd.exe /c echo [a-z]{6} > \\\\\\\\.\\\\pipe\\\\[a-z]{6}$".to_string(),
             "Metasploit-style cmd with pipe (possible use of Meterpreter 'getsystem')".to_string(),
-        );
+        ];
+
         regexes.push(tmp);
 
         let ret: HashMap<String, Regex> = configs::get_regexes(regexes);
 
-        assert_eq!(
-            ret.contains_key("^cmd.exe /c echo [a-z]{6} > \\\\\\\\.\\\\pipe\\\\[a-z]{6}$"),
-            true
-        );
-        assert_eq!(
-            ret.contains_key("^cmd.exe /c echo [a-z]{6} > \\\\\\\\.\\\\pipe\\\\[a-z]{6}"),
-            false
-        );
+        assert!(ret.contains_key("^cmd.exe /c echo [a-z]{6} > \\\\\\\\.\\\\pipe\\\\[a-z]{6}$"),);
+        assert!(!ret.contains_key("^cmd.exe /c echo [a-z]{6} > \\\\\\\\.\\\\pipe\\\\[a-z]{6}"));
     }
 
     #[test]
     fn test_get_whitelist_regex() {
         let mut regexes: Vec<Vec<String>> = Vec::new();
-        let mut tmp = Vec::new();
-        tmp.push(
+        let tmp = vec![
             "^\"C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome\\.exe".to_string(),
-        );
+        ];
         regexes.push(tmp);
 
         let ret: Vec<Regex> = configs::get_whitelist_regex(regexes);
@@ -253,6 +250,5 @@ mod tests {
     fn test_failed_read_csv() {
         let csv = configs::read_csv("hogehoge.txt");
         assert_eq!(csv.len(), 0);
-        assert_ne!(csv.len(), 1);
     }
 }

@@ -1,5 +1,3 @@
-use lazy_static::__Deref;
-
 use crate::detections::print::MessageNotation;
 use crate::detections::utils;
 use crate::models::event;
@@ -47,7 +45,7 @@ impl Security {
         };
         sec.setup_configs();
 
-        return sec;
+        sec
     }
 
     pub fn disp(&self) {
@@ -86,7 +84,7 @@ impl Security {
         msges.push("EventID : 4672".to_string());
         msges.push(format!("Total Admin Logon: {}", self.total_admin_logons));
 
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 
     fn disp_multiple_sid_logon(&self) -> Vec<Vec<String>> {
@@ -108,7 +106,7 @@ impl Security {
                 msges.push(format!("Username: {}", username));
                 msges.push(format!("User SID Access Count: {}", sids.len()));
 
-                return Option::Some(msges);
+                Option::Some(msges)
             })
             .collect();
     }
@@ -123,10 +121,9 @@ impl Security {
         }
 
         let mut msges: Vec<String> = Vec::new();
-        msges.push(format!("EventID : 4625"));
-        msges.push(format!(
-            "Message: High number of total logon failures for multiple accounts"
-        ));
+        msges.push("EventID : 4625".to_string());
+        msges
+            .push("Message: High number of total logon failures for multiple accounts".to_string());
         msges.push(format!(
             "Total accounts: {}",
             self.account_2_failedcnt.keys().count()
@@ -136,7 +133,7 @@ impl Security {
             self.total_failed_logons
         ));
 
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 
     // ユーザー毎にログインの失敗回数の閾値を超えたら、メッセージを出力
@@ -155,7 +152,7 @@ impl Security {
                 msges.push(format!("Username: {}", key));
                 msges.push(format!("Total logon failures: {}", failed_cnt));
 
-                return Option::Some(msges);
+                Option::Some(msges)
             })
             .collect();
     }
@@ -164,44 +161,44 @@ impl Security {
         let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
         {
             let config_value = configs["alert_all_admin"].as_i64();
-            if config_value.is_some() {
-                self.alert_all_admin = config_value.unwrap() as i32;
+            if let Some(value) = config_value {
+                self.alert_all_admin = value as i32;
             }
         }
         {
             let config_value = configs["show_total_admin_logons"].as_i64();
-            if config_value.is_some() {
-                self.show_total_admin_logons = config_value.unwrap() as i32;
+            if let Some(value) = config_value {
+                self.show_total_admin_logons = value as i32;
             }
         }
         {
             let config_value = configs["max_total_failed_logons"].as_i64();
-            if config_value.is_some() {
-                self.max_total_failed_logons = config_value.unwrap() as i32;
+            if let Some(value) = config_value {
+                self.max_total_failed_logons = value as i32;
             }
         }
         {
             let config_value = configs["max_failed_logons"].as_i64();
-            if config_value.is_some() {
-                self.max_failed_logons = config_value.unwrap() as i32;
+            if let Some(value) = config_value {
+                self.max_failed_logons = value as i32;
             }
         }
         {
             let config_value = configs["max_passspray_login"].as_i64();
-            if config_value.is_some() {
-                self.max_passspray_login = config_value.unwrap() as i32;
+            if let Some(value) = config_value {
+                self.max_passspray_login = value as i32;
             }
         }
         {
             let config_value = configs["max_passspray_uniquser"].as_i64();
-            if config_value.is_some() {
-                self.max_passspray_uniquser = config_value.unwrap() as i32;
+            if let Some(value) = config_value {
+                self.max_passspray_uniquser = value as i32;
             }
         }
         {
             let config_value = configs["max_total_sensitive_privuse"].as_i64();
-            if config_value.is_some() {
-                self.max_total_sensitive_privuse = config_value.unwrap() as i32;
+            if let Some(value) = config_value {
+                self.max_total_sensitive_privuse = value as i32;
             }
         }
     }
@@ -226,7 +223,7 @@ impl Security {
             .and_then(Security::print_console);
         self.pass_spray(&event_id, &event_data)
             .and_then(Security::print_console);
-        self.audit_log_cleared(&event_id, &user_data, &system.time_created.system_time)
+        self.audit_log_cleared(&event_id, user_data, &system.time_created.system_time)
             .and_then(Security::print_console);
     }
 
@@ -234,17 +231,17 @@ impl Security {
         let stdout = std::io::stdout();
         let mut stdout = stdout.lock();
         v.iter().for_each(|s| {
-            MessageNotation::info_noheader(&mut stdout, format!("{}", s)).ok();
+            MessageNotation::info_noheader(&mut stdout, s.to_string()).ok();
         });
-        MessageNotation::info_noheader(&mut stdout, format!("\n")).ok();
-        return Option::Some(v);
+        MessageNotation::info_noheader(&mut stdout, "\n".to_string()).ok();
+        Option::Some(v)
     }
 
     fn process_created(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) {
         if event_id != "4688" {
             return;
@@ -255,15 +252,15 @@ impl Security {
             .get("ParentProcessName")
             .unwrap_or(&self.empty_str);
         let configs: &yaml_rust::Yaml = &configs::CONFIG.configs;
-        let value = configs["minlength"].as_i64().unwrap_or(1000).clone();
+        let value = configs["minlength"].as_i64().unwrap_or(1000);
         utils::check_command(
             4688,
-            &commandline,
+            commandline,
             value as usize,
             0,
             &self.empty_str,
-            &creator,
-            &system_time,
+            creator,
+            system_time,
         );
     }
 
@@ -272,9 +269,9 @@ impl Security {
     //
     fn se_debug_privilege(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) {
         if event_id != "4672" {
             return;
@@ -293,7 +290,7 @@ impl Security {
                         .ok();
                     MessageNotation::info_noheader(
                         &mut stdout,
-                        format!("Message: Logon with SeDebugPrivilege (admin access)"),
+                        "Message: Logon with SeDebugPrivilege (admin access)".to_string(),
                     )
                     .ok();
                     MessageNotation::info_noheader(&mut stdout, format!("EventID: {}", 4672)).ok();
@@ -336,9 +333,9 @@ impl Security {
     // account craeted:OK
     fn account_created(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) -> Option<Vec<String>> {
         if event_id != "4720" {
             return Option::None;
@@ -354,15 +351,15 @@ impl Security {
         let sid = event_data.get("TargetSid").unwrap_or(&self.empty_str);
         msges.push(format!("User SID: {}", sid));
 
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 
     // add member to security group
     fn add_member_security_group(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) -> Option<Vec<String>> {
         // check if group is Administrator, may later expand to all groups
         if event_data.get("TargetUserName").unwrap_or(&self.empty_str) != "Administrators" {
@@ -391,13 +388,13 @@ impl Security {
         let sid = event_data.get("MemberSid").unwrap_or(&self.empty_str);
         msges.push(format!("User SID: {}", sid));
 
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 
     // An account failed to log on.:OK
     // Requires auditing logon failures
     // https://technet.microsoft.com/en-us/library/cc976395.aspx
-    fn failed_logon(&mut self, event_id: &String, event_data: &HashMap<String, String>) {
+    fn failed_logon(&mut self, event_id: &str, event_data: &HashMap<String, String>) {
         if event_id != "4625" {
             return;
         }
@@ -413,9 +410,9 @@ impl Security {
     // Sensitive Privilege Use (Mimikatz)
     fn sensitive_priviledge(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) -> Option<Vec<String>> {
         if event_id != "4673" {
             return Option::None;
@@ -444,14 +441,14 @@ impl Security {
             .unwrap_or(&self.empty_str);
         msges.push(format!("Domain Name: {}", domainname));
 
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 
     fn attempt_priviledge(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
-        system_time: &String,
+        system_time: &str,
     ) -> Option<Vec<String>> {
         if event_id != "4674" {
             return Option::None;
@@ -481,13 +478,13 @@ impl Security {
 
         msges.push("Desired Access: WRITE_DAC".to_string());
 
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 
     // A logon was attempted using explicit credentials.
     fn pass_spray(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         event_data: &HashMap<String, String>,
     ) -> Option<Vec<String>> {
         if event_id != "4648" {
@@ -519,8 +516,8 @@ impl Security {
             self.empty_str.to_string(),
             |mut acc: String, cur| -> String {
                 acc.push_str(cur);
-                acc.push_str(" ");
-                return acc;
+                acc.push(' ');
+                acc
             },
         );
 
@@ -549,14 +546,14 @@ impl Security {
         // reset
         self.passspray_2_user = HashMap::new();
 
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 
     fn audit_log_cleared(
         &mut self,
-        event_id: &String,
+        event_id: &str,
         user_data: &Option<event::UserData>,
-        system_time: &String,
+        system_time: &str,
     ) -> Option<Vec<String>> {
         if event_id != "1102" {
             return Option::None;
@@ -576,7 +573,7 @@ impl Security {
             username.unwrap_or(&self.empty_str)
         ));
 
-        return Option::Some(msges);
+        Option::Some(msges)
     }
 }
 
@@ -596,7 +593,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -641,7 +638,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -679,11 +676,11 @@ mod tests {
             </System>
             <EventData></EventData>
         </Event>"#;
-        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
+        let event: event::Evtx = quick_xml::de::from_str(xml_str)
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -717,7 +714,7 @@ mod tests {
     }
 
     fn get_account_created_xml() -> String {
-        return r#"
+        r#"
         <?xml version="1.0" encoding="utf-8" standalone="yes"?>
         <Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'>
             <System>
@@ -767,7 +764,7 @@ mod tests {
                 <Data Name='SidHistory'>-</Data>
                 <Data Name='LogonHours'>%%1797</Data>
             </EventData>
-        </Event>"#.to_string();
+        </Event>"#.to_string()
     }
 
     // 正しくヒットするパターン(eventid=4732)
@@ -778,7 +775,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -823,7 +820,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -868,7 +865,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -913,7 +910,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -937,7 +934,7 @@ mod tests {
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -976,11 +973,11 @@ mod tests {
                 <Data Name='TargetUserName'>Administrators</Data>
             </EventData>
         </Event>"#;
-        let event: event::Evtx = quick_xml::de::from_str(&xml_str)
+        let event: event::Evtx = quick_xml::de::from_str(xml_str)
             .map_err(|e| {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                MessageNotation::alert(&mut stdout, format!("{}", e.to_string())).ok();
+                MessageNotation::alert(&mut stdout, e.to_string()).ok();
             })
             .unwrap();
 
@@ -1014,7 +1011,7 @@ mod tests {
     }
 
     fn get_add_member_security_group_xml() -> String {
-        return r#"
+        r#"
         <?xml version="1.0" encoding="utf-8" standalone="yes"?>
         <Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'>
             <System>
@@ -1045,7 +1042,7 @@ mod tests {
                 <Data Name='SubjectLogonId'>0x3e7</Data>
                 <Data Name='PrivilegeList'>-</Data>
             </EventData>
-        </Event>"#.to_string();
+        </Event>"#.to_string()
     }
 
     // ユーザー数が一つなら、ログ数が幾らあっても、メッセージは表示されないはず。
@@ -1084,10 +1081,7 @@ mod tests {
         sec.max_failed_logons = 4;
 
         // メッセージが表示されるには2ユーザー以上失敗している必要がある。まず一人目
-        sec.failed_logon(
-            &event.system.event_id.to_string(),
-            &event.parse_event_data(),
-        );
+        sec.failed_logon(&event.system.event_id, &event.parse_event_data());
         assert_eq!(1, sec.total_failed_logons);
 
         let ite = [1, 2, 3, 4, 5, 6, 7].iter();
@@ -1162,7 +1156,7 @@ mod tests {
         // エラーにならなければOK
         let event_nofield: event::Evtx = quick_xml::de::from_str(xml_nofield).unwrap();
         sec.failed_logon(
-            &event_nofield.system.event_id.to_string(),
+            &event_nofield.system.event_id,
             &event_nofield.parse_event_data(),
         );
     }
@@ -1189,10 +1183,7 @@ mod tests {
         sec.max_total_failed_logons = 5;
 
         // メッセージが表示されるには2ユーザー以上失敗している必要がある。まず一人目
-        sec.failed_logon(
-            &event.system.event_id.to_string(),
-            &event.parse_event_data(),
-        );
+        sec.failed_logon(&event.system.event_id, &event.parse_event_data());
         assert_eq!(0, sec.total_failed_logons);
 
         let ite = [1, 2, 3, 4, 5, 6, 7].iter();
@@ -1207,7 +1198,7 @@ mod tests {
     }
 
     fn get_failed_logon_xml() -> String {
-        return r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+        r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
         <Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'>
             <System>
 <Provider Name='Microsoft-Windows-Security-Auditing' Guid='{54849625-5478-4994-a5ba-3e3b0328c30d}'/>
@@ -1249,7 +1240,7 @@ mod tests {
                 <Data Name='IpPort'>33083</Data>
             </EventData>
         </Event>"#
-            .to_string();
+            .to_string()
     }
 
     // Hitするパターンとしないパターンをまとめてテスト
@@ -1320,7 +1311,7 @@ mod tests {
     }
 
     fn get_sensitive_prividedge_hit() -> String {
-        return r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+        r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
         <Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'>
             <System>
                 <Provider Name='Microsoft-Windows-Security-Auditing' Guid='{54849625-5478-4994-a5ba-3e3b0328c30d}'/>
@@ -1349,7 +1340,7 @@ mod tests {
                 <Data Name='ProcessId'>0x15a8</Data>
                 <Data Name='ProcessName'>C:\Tools\mimikatz\mimikatz.exe</Data>
             </EventData>
-        </Event>"#.to_string();
+        </Event>"#.to_string()
     }
 
     // Hitするテスト
@@ -1456,7 +1447,7 @@ mod tests {
     }
 
     fn get_attempt_priviledge_xml() -> String {
-        return r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+        r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
             <Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'>
                 <System>
                     <Provider Name='Microsoft-Windows-Security-Auditing' Guid='{54849625-5478-4994-a5ba-3e3b0328c30d}'/>
@@ -1489,7 +1480,7 @@ mod tests {
                     <Data Name='ProcessId'>0x21c</Data>
                     <Data Name='ProcessName'>C:\Windows\System32\services.exe</Data>
                 </EventData>
-            </Event>"#.to_string();
+            </Event>"#.to_string()
     }
 
     #[test]
@@ -1544,7 +1535,7 @@ mod tests {
     }
 
     fn get_passs_pray_hit() -> String {
-        return r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+        r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
             <Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'>
                 <System>
                     <Provider Name='Microsoft-Windows-Security-Auditing' Guid='{54849625-5478-4994-a5ba-3e3b0328c30d}'/>
@@ -1578,7 +1569,7 @@ mod tests {
                     <Data Name='IpAddress'>172.16.144.128</Data>
                     <Data Name='IpPort'>445</Data>
                 </EventData>
-            </Event>"#.to_string();
+            </Event>"#.to_string()
     }
 
     // 普通にHitするテスト
@@ -1661,7 +1652,7 @@ mod tests {
         let msges = sec.disp_multiple_sid_logon();
         assert_eq!(1, msges.len());
         {
-            let mut ite = msges.iter().next().unwrap().iter();
+            let mut ite = msges.get(0).unwrap().iter();
             assert_eq!(
                 &"EventID : 4672".to_string(),
                 ite.next().unwrap_or(&"".to_string())
@@ -1690,7 +1681,7 @@ mod tests {
         let msges = sec.disp_multiple_sid_logon();
         assert_eq!(1, msges.len());
         {
-            let mut ite = msges.iter().next().unwrap().iter();
+            let mut ite = msges.get(0).unwrap().iter();
             assert_eq!(
                 &"EventID : 4672".to_string(),
                 ite.next().unwrap_or(&"".to_string())
@@ -1763,13 +1754,12 @@ mod tests {
             </EventData>
         </Event>"#.to_string();
 
-        return xml
-            .replace("$SubjectUserSid_Value", &user_sid)
-            .replace("$SubjectUserName_Value", &username);
+        xml.replace("$SubjectUserSid_Value", &user_sid)
+            .replace("$SubjectUserName_Value", &username)
     }
 
     fn get_audit_log_cleared_xml() -> String {
-        return r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+        r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
             <Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'>
                 <System>
                     <Provider Name='Microsoft-Windows-Eventlog' Guid='{fc65ddd8-d6ef-4962-83d5-6e5cfe9ce148}'/>
@@ -1795,6 +1785,6 @@ mod tests {
                         <SubjectLogonId>0x30550</SubjectLogonId>
                     </LogFileCleared>
                 </UserData>
-            </Event>"#.to_string();
+            </Event>"#.to_string()
     }
 }

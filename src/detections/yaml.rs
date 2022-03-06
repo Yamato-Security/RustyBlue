@@ -22,7 +22,7 @@ impl ParseYaml {
         let mut file_content = String::new();
 
         let mut fr = fs::File::open(path)
-            .map(|f| BufReader::new(f))
+            .map(BufReader::new)
             .map_err(|e| e.to_string())?;
 
         fr.read_to_string(&mut file_content)
@@ -44,7 +44,7 @@ impl ParseYaml {
             self.files.push(loaded_yaml);
         });
 
-        return Result::Ok(());
+        Result::Ok(())
     }
 
     pub fn read_dir<P: AsRef<Path>>(&mut self, path: P) -> io::Result<String> {
@@ -61,7 +61,7 @@ impl ParseYaml {
                                     for i in docs {
                                         // If there is no "enabled" it does not load
                                         if i["enabled"].as_bool().unwrap_or(false) {
-                                            &self.files.push(i);
+                                            self.files.push(i);
                                         }
                                     }
                                 }
@@ -122,6 +122,6 @@ mod tests {
         let path = Path::new("test_files/rules/yaml/error.yml");
         let ret = yaml.read_file(path.to_path_buf()).unwrap();
         let rule = YamlLoader::load_from_str(&ret);
-        assert_eq!(rule.is_err(), true);
+        assert!(rule.is_err());
     }
 }
